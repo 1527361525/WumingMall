@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wlyykf.mall.mappers.ProductMapper">
+    <select id="getProductList" resultType="com.wlyykf.mall.vo.ProductVO">
+        WITH RECURSIVE category_tree AS (
+            SELECT category_id
+            FROM tb_category WHERE category_id = #{categoryId} AND del_flag = 0
+            UNION ALL
+            SELECT c.category_id
+            FROM tb_category c
+            JOIN category_tree ct ON c.parent_id = ct.category_id
+            WHERE c.del_flag = 0
+        )
+        SELECT
+            p.product_id AS productId,
+            p.name,
+            p.price,
+            p.description,
+            p.product_image AS productImage,
+            p.total_sales AS totalSales
+        FROM
+            tb_product p
+        WHERE
+            p.del_flag = 0
+        AND p.category_id IN (SELECT category_id FROM category_tree)
+        ORDER BY
+        <choose>
+            <when test="orderField == 'create_time'">
+                ${orderField} ${sortDirection}
+            </when>
+            <otherwise>
+                ${orderField} ${sortDirection},
+                p.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

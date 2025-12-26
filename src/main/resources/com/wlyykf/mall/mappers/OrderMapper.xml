@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wlyykf.mall.mappers.OrderMapper">
+    <select id="getOrderList" resultType="com.wlyykf.mall.vo.OrderVO">
+        SELECT
+            order_id AS orderId,
+            order_no AS orderNo,
+            total_amount AS totalAmount,
+            order_status AS orderStatus,
+            create_time AS createTime,
+            user_id AS userId
+        FROM tb_order
+        <where>
+            del_flag = 0
+            <if test="query.startDate != null">
+                AND create_time >= #{query.startDate}
+            </if>
+            <if test="query.endDate != null">
+                AND create_time &lt; #{query.endDate}
+            </if>
+            <if test="query.orderStatus != null">
+                AND order_status = #{query.orderStatus}
+            </if>
+            <if test="query.userId != null">
+                AND user_id = #{query.userId}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="getTotalAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(total_amount), 0)
+        FROM tb_order
+        WHERE
+            payment_time IS NOT NULL
+            AND del_flag = 0
+        <if test="startDate != null">
+            AND create_time >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND create_time &lt; #{endDate}
+        </if>
+    </select>
+
+    <select id="getAllTypeOrderCount" resultType="java.util.Map">
+        SELECT
+            t.status_value AS orderStatus,
+            IFNULL(o.typeCount, 0) AS typeCount
+        FROM (
+            SELECT 0 AS status_value UNION ALL
+            SELECT 1 UNION ALL
+            SELECT 2 UNION ALL
+            SELECT 3
+        ) t
+        LEFT JOIN (
+            SELECT
+                order_status AS orderStatus,
+                COUNT(*) AS typeCount
+            FROM tb_order
+            WHERE del_flag = 0
+            <if test="startDate != null">
+                AND create_time >= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND create_time &lt; #{endDate}
+            </if>
+            GROUP BY order_status
+        ) o
+        ON t.status_value = o.orderStatus
+        ORDER BY t.status_value;
+    </select>
+</mapper>
