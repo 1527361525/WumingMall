@@ -17,4 +17,6 @@ public class UserVO {
     private String avatar;
 
     private BigDecimal money;
+
+    private Integer role;
 }

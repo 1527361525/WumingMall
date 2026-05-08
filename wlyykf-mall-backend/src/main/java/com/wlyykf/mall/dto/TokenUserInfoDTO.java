@@ -8,4 +8,5 @@ public class TokenUserInfoDTO {
     private String nickName;
     private Long expireAt;
     private String token;
+    private Integer role;
 }

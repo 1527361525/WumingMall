@@ -19,4 +19,6 @@ public class RegisterDTO {
     @NotBlank(message = "验证码不能为空")
     private String code;
 
+    private Integer role;
+
 }

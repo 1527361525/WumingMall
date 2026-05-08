@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService {
             TokenUserInfoDTO tokenUserInfoDTO = new TokenUserInfoDTO();
             tokenUserInfoDTO.setUserId(user.getUserId());
             tokenUserInfoDTO.setNickName(user.getNickName());
+            tokenUserInfoDTO.setRole(user.getRole());
             redisComponent.saveTokenInfo(tokenUserInfoDTO);
 
             return ResponseVO.success("登录成功", tokenUserInfoDTO);
@@ -116,6 +117,9 @@ public class UserServiceImpl implements UserService {
             user.setEmail(registerDTO.getEmail());
             user.setNickName(registerDTO.getNickName());
             user.setPassword(PasswordUtil.encode(registerDTO.getPassword()));
+            // 默认注册为普通用户（role=0），如果DTO中指定了角色则使用指定角色
+            Integer role = registerDTO.getRole();
+            user.setRole(role != null ? role : 0);
             if (userMapper.insert(user) > 0) {
                 return ResponseVO.success("注册成功", null);
             }
@@ -141,10 +145,13 @@ public class UserServiceImpl implements UserService {
         TokenUserInfoDTO tokenUserInfoDTO = currentUserUtil.getCurrentUserInfo();
         Map<String, Object> result = new HashMap<>();
         if (tokenUserInfoDTO != null) {
-            result.put("isAdmin", tokenUserInfoDTO.getUserId().equals(appConfig.getAdminId()));
+            // role=2 表示管理者
+            result.put("isAdmin", tokenUserInfoDTO.getRole() != null && tokenUserInfoDTO.getRole() == 2);
+            result.put("role", tokenUserInfoDTO.getRole());
             return result;
         }
         result.put("isAdmin", false);
+        result.put("role", null);
         return result;
     }
 
@@ -163,6 +170,7 @@ public class UserServiceImpl implements UserService {
                 userVO.setPhone(dbUser.getPhone());
                 userVO.setAvatar(dbUser.getAvatar());
                 userVO.setMoney(dbUser.getMoney());
+                userVO.setRole(dbUser.getRole());
                 return ResponseVO.success("更新成功", userVO);
             }
         }
@@ -180,6 +188,7 @@ public class UserServiceImpl implements UserService {
             userVO.setPhone(dbUser.getPhone());
             userVO.setAvatar(dbUser.getAvatar());
             userVO.setMoney(dbUser.getMoney());
+            userVO.setRole(dbUser.getRole());
             return ResponseVO.success("获取成功", userVO);
         }
         return ResponseVO.fail("获取失败", null);

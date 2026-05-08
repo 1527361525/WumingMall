@@ -10,7 +10,8 @@
             email,
             phone,
             avatar,
-            money
+            money,
+            role
         FROM
             tb_user
         WHERE
@@ -30,7 +31,8 @@
             email,
             phone,
             avatar,
-            money
+            money,
+            role
         FROM
             tb_user
         WHERE

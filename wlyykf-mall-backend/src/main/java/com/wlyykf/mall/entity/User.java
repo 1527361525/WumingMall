@@ -26,4 +26,6 @@ public class User extends BaseEntity {
     private String avatar;
 
     private BigDecimal money;
+
+    private Integer role;
 }
