@@ -6,6 +6,7 @@ import com.wlyykf.mall.dto.LoginDTO;
 import com.wlyykf.mall.dto.RegisterDTO;
 import com.wlyykf.mall.dto.TokenUserInfoDTO;
 import com.wlyykf.mall.dto.UserUpdateDTO;
+import com.wlyykf.mall.service.LogService;
 import com.wlyykf.mall.service.UserService;
 import com.wlyykf.mall.utils.CurrentUserUtil;
 import com.wlyykf.mall.vo.PageResultVO;
@@ -36,6 +37,12 @@ public class UserController {
     @Resource
     private CurrentUserUtil currentUserUtil;
 
+    @Resource
+    private LogService logService;
+
+    @Resource
+    private HttpServletRequest request;
+
 
     /**
      * 登录
@@ -43,7 +50,13 @@ public class UserController {
      */
     @PostMapping("/login")
     public ResponseVO<TokenUserInfoDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
-        return userService.login(loginDTO);
+        ResponseVO<TokenUserInfoDTO> response = userService.login(loginDTO);
+        // 登录成功后记录登录日志
+        if (response.getCode() != null && response.getCode() == 200 && response.getData() != null) {
+            TokenUserInfoDTO userInfo = response.getData();
+            logService.recordLoginLog(userInfo.getUserId(), userInfo.getRole(), getClientIp());
+        }
+        return response;
     }
 
     /**
@@ -51,6 +64,11 @@ public class UserController {
      */
     @PostMapping("/logout")
     public ResponseVO<Void> logout() {
+        // 记录登出日志
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser != null) {
+            logService.recordLogoutLog(currentUser.getUserId(), currentUser.getRole(), getClientIp());
+        }
         return userService.logout();
     }
 
@@ -150,5 +168,32 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseVO<Void> deleteUser(@PathVariable @NotNull Long userId) {
         return userService.deleteUser(userId);
+    }
+
+    /**
+     * 获取客户端IP地址
+     */
+    private String getClientIp() {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // 如果是多级代理，取第一个IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 }
