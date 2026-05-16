@@ -1,5 +1,6 @@
 package com.wlyykf.mall.controller;
 
+import com.wlyykf.mall.annotation.OperationLog;
 import com.wlyykf.mall.dto.CategoryDTO;
 import com.wlyykf.mall.service.CategoryService;
 import com.wlyykf.mall.vo.CategoryVO;
@@ -27,6 +28,7 @@ public class CategoryController {
      * @param categoryDTO 分类信息
      */
     @PostMapping
+    @OperationLog(operationType = "CATEGORY_ADD", operationContent = "添加分类")
     public ResponseVO<Void> addCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
         return categoryService.addCategory(categoryDTO);
     }
@@ -36,6 +38,7 @@ public class CategoryController {
      * @param categoryDTO 分类信息
      */
     @PutMapping
+    @OperationLog(operationType = "CATEGORY_UPDATE", operationContent = "修改分类")
     public ResponseVO<Void> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
         return categoryService.updateCategory(categoryDTO);
     }
@@ -45,6 +48,7 @@ public class CategoryController {
      * @param categoryId 分类id
      */
     @PutMapping("/{categoryId}")
+    @OperationLog(operationType = "CATEGORY_DELETE", operationContent = "删除分类")
     public ResponseVO<Void> deleteCategory(@PathVariable @NotNull Long categoryId) {
         return categoryService.deleteCategory(categoryId);
     }

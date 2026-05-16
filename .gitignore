@@ -1,0 +1,37 @@
+# ==================== Frontend (wlyykf-mall-front) ====================
+# Logs
+wlyykf-mall-front/logs
+wlyykf-mall-front/*.log
+wlyykf-mall-front/npm-debug.log*
+wlyykf-mall-front/yarn-debug.log*
+wlyykf-mall-front/yarn-error.log*
+wlyykf-mall-front/pnpm-debug.log*
+wlyykf-mall-front/lerna-debug.log*
+
+wlyykf-mall-front/node_modules
+wlyykf-mall-front/.DS_Store
+wlyykf-mall-front/dist
+wlyykf-mall-front/dist-ssr
+wlyykf-mall-front/coverage
+wlyykf-mall-front/*.local
+
+wlyykf-mall-front/cypress/videos/
+wlyykf-mall-front/cypress/screenshots/
+
+# Editor directories and files
+wlyykf-mall-front/.vscode/*
+!wlyykf-mall-front/.vscode/extensions.json
+wlyykf-mall-front/*.suo
+wlyykf-mall-front/*.ntvs*
+wlyykf-mall-front/*.njsproj
+wlyykf-mall-front/*.sln
+wlyykf-mall-front/*.sw?
+
+wlyykf-mall-front/*.tsbuildinfo
+
+# ==================== Backend (wlyykf-mall-backend) ====================
+# IDE
+wlyykf-mall-backend/.idea/
+
+# 编译输出目录
+wlyykf-mall-backend/target/

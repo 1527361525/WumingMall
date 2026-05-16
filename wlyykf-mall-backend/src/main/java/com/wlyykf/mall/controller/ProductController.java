@@ -1,5 +1,6 @@
 package com.wlyykf.mall.controller;
 
+import com.wlyykf.mall.annotation.OperationLog;
 import com.wlyykf.mall.dto.ProductListDTO;
 import com.wlyykf.mall.dto.ProductUpdateDTO;
 import com.wlyykf.mall.entity.Product;
@@ -30,6 +31,7 @@ public class ProductController {
      * @param productDTO 商品信息
      */
     @PostMapping
+    @OperationLog(operationType = "PRODUCT_ADD", operationContent = "添加商品")
     public ResponseVO<Void> addProduct(@Valid @RequestBody ProductUpdateDTO productDTO) {
         return productService.addProduct(productDTO);
     }
@@ -39,6 +41,7 @@ public class ProductController {
      * @param productId 商品id
      */
     @PutMapping("/{productId}")
+    @OperationLog(operationType = "PRODUCT_DELETE", operationContent = "删除商品")
     public ResponseVO<Void> deleteProduct(@PathVariable @NotNull Long productId) {
         return productService.deleteProduct(productId);
     }
@@ -48,6 +51,7 @@ public class ProductController {
      * @param productDTO 商品信息
      */
     @PutMapping
+    @OperationLog(operationType = "PRODUCT_UPDATE", operationContent = "修改商品")
     public ResponseVO<Void> updateProduct(@Valid @RequestBody ProductUpdateDTO productDTO) {
         return productService.updateProduct(productDTO);
     }

@@ -1,5 +1,6 @@
 package com.wlyykf.mall.controller;
 
+import com.wlyykf.mall.annotation.OperationLog;
 import com.wlyykf.mall.dto.OrderAddDTO;
 import com.wlyykf.mall.dto.OrderBuyDTO;
 import com.wlyykf.mall.dto.OrderListDTO;
@@ -36,6 +37,7 @@ public class OrderController {
      * @param orderUpdateDTO 修改信息
      */
     @PutMapping
+    @OperationLog(operationType = "ORDER_UPDATE", operationContent = "修改订单")
     public ResponseVO<Void> updateOrder(@Valid @RequestBody OrderUpdateDTO orderUpdateDTO) {
         return orderService.updateOrder(orderUpdateDTO);
     }
@@ -114,6 +116,7 @@ public class OrderController {
      * @param orderId 订单ID
      */
     @PostMapping("/deliver")
+    @OperationLog(operationType = "ORDER_DELIVER", operationContent = "订单发货")
     public ResponseVO<Void> deliver(@RequestParam @NotNull Long orderId) {
         return orderService.deliver(orderId);
     }
