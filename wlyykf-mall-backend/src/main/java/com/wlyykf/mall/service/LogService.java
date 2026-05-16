@@ -33,4 +33,15 @@ public interface LogService {
      * @param ip              IP地址
      */
     void recordOperationLog(Long userId, Integer userType, String operationType, String operationContent, String ip);
+
+    /**
+     * 记录用户浏览日志
+     *
+     * @param userId       用户ID
+     * @param productId    商品ID
+     * @param categoryId   商品分类ID
+     * @param stayDuration 停留时长（秒）
+     * @param ip           IP地址
+     */
+    void recordBrowseLog(Long userId, Long productId, Long categoryId, Integer stayDuration, String ip);
 }

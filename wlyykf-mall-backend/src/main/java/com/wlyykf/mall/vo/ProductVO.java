@@ -21,4 +21,6 @@ public class ProductVO {
      * 销量
      */
     private Integer totalSales;
+
+    private Long categoryId;
 }

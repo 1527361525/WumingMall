@@ -81,6 +81,7 @@ public class ProductServiceImpl implements ProductService {
             productVO.setDescription(product.getDescription());
             productVO.setProductImage(product.getProductImage());
             productVO.setTotalSales(product.getTotalSales());
+            productVO.setCategoryId(product.getCategoryId());
             return ResponseVO.success("查询成功", productVO);
         }
         return ResponseVO.fail("商品不存在", null);

@@ -26,6 +26,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -36,6 +37,7 @@ import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
 const categoryStore = useCategoryStore()
+const router = useRouter()
 
 const categories = ref([])
 const selectedProductId = ref(null)
@@ -46,6 +48,13 @@ const productListRef = ref(null)
 
 // 初始化
 onMounted(async () => {
+  // 检查用户是否已登录
+  if (!authStore.token) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+
   try {
     // 检查是否为管理员并更新用户状态
     await authStore.checkIsAdmin()
@@ -54,6 +63,7 @@ onMounted(async () => {
     categories.value = await categoryStore.fetchCategories()
   } catch (error) {
     ElMessage.error('用户未登录')
+    router.push('/login')
   }
 })
 

@@ -1,7 +1,9 @@
 package com.wlyykf.mall.service.impl;
 
 import com.wlyykf.mall.entity.OperationLog;
+import com.wlyykf.mall.entity.UserBrowseLog;
 import com.wlyykf.mall.mappers.OperationLogMapper;
+import com.wlyykf.mall.mappers.UserBrowseLogMapper;
 import com.wlyykf.mall.service.LogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 public class LogServiceImpl implements LogService {
 
     private final OperationLogMapper operationLogMapper;
+    private final UserBrowseLogMapper userBrowseLogMapper;
 
     @Override
     @Async
@@ -69,6 +72,28 @@ public class LogServiceImpl implements LogService {
             log.debug("记录操作日志成功: userId={}, operationType={}", userId, operationType);
         } catch (Exception e) {
             log.error("记录操作日志失败: userId={}, operationType={}", userId, operationType, e);
+        }
+    }
+
+    @Override
+    @Async
+    public void recordBrowseLog(Long userId, Long productId, Long categoryId, Integer stayDuration, String ip) {
+        try {
+            UserBrowseLog browseLog = new UserBrowseLog();
+            browseLog.setUserId(userId);
+            browseLog.setProductId(productId);
+            browseLog.setCategoryId(categoryId);
+            browseLog.setBrowseTime(LocalDateTime.now());
+            browseLog.setStayDuration(stayDuration != null && stayDuration > 0 ? stayDuration : 1);
+            browseLog.setIpAddress(ip);
+            browseLog.setCreateTime(LocalDateTime.now());
+            browseLog.setUpdateTime(LocalDateTime.now());
+            browseLog.setDelFlag(0);
+
+            userBrowseLogMapper.insert(browseLog);
+            log.debug("记录浏览日志成功: userId={}, productId={}, stayDuration={}", userId, productId, stayDuration);
+        } catch (Exception e) {
+            log.error("记录浏览日志失败: userId={}, productId={}", userId, productId, e);
         }
     }
 }

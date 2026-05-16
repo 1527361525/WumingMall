@@ -108,6 +108,7 @@ import { useCartStore } from '@/stores/cart.store'
 import { useOrder } from '@/composables/useOrder'
 import { ElMessage } from 'element-plus'
 import defaultProductImage from '@/assets/images/default-product.jpg'
+import axios from 'axios'
 
 const props = defineProps({
   productId: String,
@@ -141,16 +142,64 @@ const product = ref({
   description: ''
 })
 
+// 浏览日志相关状态
+const browseStartTime = ref(null)
+const isUserLoggedIn = ref(false)
+const currentCategoryId = ref(null)
+
+// 检查用户登录状态
+const checkUserLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  isUserLoggedIn.value = !!token
+}
+
+// 记录浏览日志
+const recordBrowseLog = async (stayDuration = 0) => {
+  // 只记录已登录用户的浏览行为
+  if (!isUserLoggedIn.value || !props.productId) {
+    return
+  }
+
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return
+  }
+
+  try {
+    await axios.post('/log/browse', {
+      productId: parseInt(props.productId),
+      categoryId: currentCategoryId.value,
+      stayDuration: stayDuration
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+  } catch (error) {
+    // 浏览日志记录失败不影响主业务流程
+    console.debug('浏览日志记录失败:', error)
+  }
+}
+
 // 监听modelValue变化
 watch(() => props.modelValue, (newVal) => {
   visible.value = newVal
+  if (newVal) {
+    // 弹窗打开时，记录浏览开始时间
+    checkUserLoginStatus()
+    if (isUserLoggedIn.value) {
+      browseStartTime.value = Date.now()
+    }
+  }
 })
 
 // 监听productId变化
 watch(() => props.productId, async (newVal) => {
   if (newVal) {
     try {
-      product.value = await productStore.fetchProductDetail(newVal)
+      const productDetail = await productStore.fetchProductDetail(newVal)
+      product.value = productDetail
+      currentCategoryId.value = productDetail.categoryId || null
     } catch (error) {
       ElMessage.error('获取商品详情失败')
     }
@@ -163,7 +212,13 @@ watch(visible, (newVal) => {
 })
 
 // 关闭弹窗
-const close = () => {
+const close = async () => {
+  // 计算停留时长并发送浏览日志
+  if (isUserLoggedIn.value && browseStartTime.value) {
+    const stayDuration = Math.floor((Date.now() - browseStartTime.value) / 1000)
+    await recordBrowseLog(stayDuration)
+    browseStartTime.value = null
+  }
   visible.value = false
   emit('close')
 }
