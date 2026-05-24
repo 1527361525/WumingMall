@@ -22,4 +22,13 @@ public class RecommendProductVO {
      * 购买次数（推荐权重）
      */
     private Integer buyCount;
+
+    /**
+     * 相似用户信息（用于协同过滤内部计算）
+     */
+    @Data
+    public static class SimilarUser {
+        private Long userId;
+        private Integer commonProducts;
+    }
 }

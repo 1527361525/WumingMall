@@ -14,6 +14,11 @@
         :category-id="selectedCategoryId"
         @show-detail="showProductDetail"
       />
+      
+      <!-- 商品推荐栏 -->
+      <RecommendBar 
+        @select-product="handleRecommendSelect"
+      />
     </div>
     
     <ProductDetail 
@@ -34,6 +39,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import CategoryMenu from '@/components/CategoryMenu.vue'
 import ProductList from '@/components/ProductList.vue'
 import ProductDetail from '@/components/ProductDetail.vue'
+import RecommendBar from '@/components/RecommendBar.vue'
 import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
@@ -115,6 +121,11 @@ const handleRefreshCategories = (newCategories) => {
   categories.value = newCategories
 }
 
+// 处理推荐商品点击
+const handleRecommendSelect = (productId) => {
+  showProductDetail(productId)
+}
+
 // 添加 nextTick import
 import { nextTick } from 'vue'
 </script>
@@ -131,6 +142,18 @@ import { nextTick } from 'vue'
   display: flex;
   gap: 20px;
   height: calc(100vh - 100px); /* 估算高度，减去顶部导航和间距 */
+}
+
+@media (max-width: 1200px) {
+  .home-content {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 992px) {
+  .home-content {
+    gap: 15px;
+  }
 }
 
 @media (max-width: 768px) {
