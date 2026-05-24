@@ -74,4 +74,27 @@
         LIMIT #{topN}
     </select>
 
+    <!-- 简单推荐：购买过此商品的用户还购买的其他商品 -->
+    <select id="getSimpleRecommend" resultType="com.wlyykf.mall.vo.RecommendProductVO">
+        SELECT
+            p.product_id AS productId,
+            p.name AS name,
+            p.product_image AS productImage,
+            p.price AS price,
+            COUNT(*) AS buyCount
+        FROM tb_order_item oi1
+        JOIN tb_order_item oi2 ON oi1.order_id = oi2.order_id AND oi1.product_id != oi2.product_id
+        JOIN tb_product p ON oi2.product_id = p.product_id
+        JOIN tb_order o ON oi2.order_id = o.order_id
+        WHERE oi1.product_id = #{productId}
+          AND o.order_status = 1
+          AND o.del_flag = 0
+          AND oi1.del_flag = 0
+          AND oi2.del_flag = 0
+          AND p.del_flag = 0
+        GROUP BY oi2.product_id, p.name, p.product_image, p.price
+        ORDER BY buyCount DESC
+        LIMIT 10
+    </select>
+
 </mapper>

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.wlyykf.mall.entity.OrderItem;
 import com.wlyykf.mall.vo.OrderItemVO;
 import com.wlyykf.mall.vo.ProductVO;
+import com.wlyykf.mall.vo.RecommendProductVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
@@ -27,4 +28,11 @@ public interface OrderItemMapper extends BaseMapper<OrderItem> {
                                              @Param("endDate") LocalDate endDate,
                                              @Param("topN") Integer n,
                                              @Param("categoryId") Long categoryId);
+
+    /**
+     * 简单推荐：购买过此商品的用户还购买的其他商品
+     * @param productId 商品ID
+     * @return 推荐商品列表
+     */
+    List<RecommendProductVO> getSimpleRecommend(@Param("productId") Long productId);
 }

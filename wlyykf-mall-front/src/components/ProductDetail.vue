@@ -3,34 +3,61 @@
     <el-dialog 
       v-model="visible" 
       :title="product.name" 
-      width="600px"
+      width="900px"
       @close="close"
     >
-      <div class="product-detail">
-        <!-- 商品图片和信息展示部分保持不变 -->
-        <div class="product-image">
-          <img :src="getImageUrl(product.productImage)" alt="商品图片">
+      <div class="product-detail-container">
+        <!-- 左侧：商品详情 -->
+        <div class="product-main">
+          <div class="product-image">
+            <img :src="getImageUrl(product.productImage)" alt="商品图片">
+          </div>
+          
+          <div class="product-info">
+            <div class="info-item">
+              <label>价格：</label>
+              <span class="price">¥{{ product.price }}</span>
+            </div>
+            
+            <div class="info-item">
+              <label>销量：</label>
+              <span>{{ product.totalSales }}</span>
+            </div>
+            
+            <div class="info-item">
+              <label>描述：</label>
+              <p>{{ product.description || '暂无描述' }}</p>
+            </div>
+            
+            <div class="actions">
+              <el-button type="primary" @click="showQuantityDialog">加入购物车</el-button>
+              <el-button @click="showBuyNowDialog">立即购买</el-button>
+            </div>
+          </div>
         </div>
         
-        <div class="product-info">
-          <div class="info-item">
-            <label>价格：</label>
-            <span class="price">¥{{ product.price }}</span>
+        <!-- 右侧：推荐商品侧边栏 -->
+        <div class="recommend-sidebar" v-if="recommendList.length > 0">
+          <div class="recommend-title">
+            <el-icon><ShoppingBag /></el-icon>
+            <span>购买过此商品的人也买了</span>
           </div>
-          
-          <div class="info-item">
-            <label>销量：</label>
-            <span>{{ product.totalSales }}</span>
-          </div>
-          
-          <div class="info-item">
-            <label>描述：</label>
-            <p>{{ product.description || '暂无描述' }}</p>
-          </div>
-          
-          <div class="actions">
-            <el-button type="primary" @click="showQuantityDialog">加入购物车</el-button>
-            <el-button @click="showBuyNowDialog">立即购买</el-button>
+          <div class="recommend-list">
+            <div 
+              v-for="item in recommendList" 
+              :key="item.productId"
+              class="recommend-item"
+              @click="goToProduct(item.productId)"
+            >
+              <div class="recommend-image">
+                <img :src="getImageUrl(item.productImage)" alt="推荐商品">
+              </div>
+              <div class="recommend-info">
+                <div class="recommend-name" :title="item.name">{{ item.name }}</div>
+                <div class="recommend-price">¥{{ item.price }}</div>
+                <div class="recommend-count">{{ item.buyCount }}人购买</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -109,13 +136,14 @@ import { useOrder } from '@/composables/useOrder'
 import { ElMessage } from 'element-plus'
 import defaultProductImage from '@/assets/images/default-product.jpg'
 import axios from 'axios'
+import { ShoppingBag } from '@element-plus/icons-vue'
 
 const props = defineProps({
   productId: String,
   modelValue: Boolean
 })
 
-const emit = defineEmits(['update:modelValue', 'close'])
+const emit = defineEmits(['update:modelValue', 'close', 'changeProduct'])
 
 const productStore = useProductStore()
 const cartStore = useCartStore()
@@ -142,6 +170,10 @@ const product = ref({
   description: ''
 })
 
+// 推荐商品相关状态
+const recommendList = ref([])
+const recommendLoading = ref(false)
+
 // 浏览日志相关状态
 const browseStartTime = ref(null)
 const isUserLoggedIn = ref(false)
@@ -151,6 +183,37 @@ const currentCategoryId = ref(null)
 const checkUserLoginStatus = () => {
   const token = localStorage.getItem('token')
   isUserLoggedIn.value = !!token
+}
+
+// 获取推荐商品列表
+const fetchRecommendList = async (productId) => {
+  if (!productId) return
+  
+  recommendLoading.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`/recommend/simple/${productId}`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : ''
+      }
+    })
+    if (response.data && response.data.code === 200) {
+      recommendList.value = response.data.data || []
+    }
+  } catch (error) {
+    console.debug('获取推荐商品失败:', error)
+    recommendList.value = []
+  } finally {
+    recommendLoading.value = false
+  }
+}
+
+// 跳转到推荐商品
+const goToProduct = (productId) => {
+  // 先关闭当前弹窗
+  close()
+  // 触发事件让父组件重新打开新商品的详情
+  emit('changeProduct', productId)
 }
 
 // 记录浏览日志
@@ -200,6 +263,8 @@ watch(() => props.productId, async (newVal) => {
       const productDetail = await productStore.fetchProductDetail(newVal)
       product.value = productDetail
       currentCategoryId.value = productDetail.categoryId || null
+      // 获取推荐商品
+      await fetchRecommendList(newVal)
     } catch (error) {
       ElMessage.error('获取商品详情失败')
     }
@@ -303,8 +368,15 @@ const getImageUrl = (sourceName) => {
 </script>
 
 <style scoped>
-/* 样式部分保持不变 */
-.product-detail {
+/* 主容器样式 */
+.product-detail-container {
+  display: flex;
+  gap: 20px;
+}
+
+/* 左侧商品详情 */
+.product-main {
+  flex: 1;
   display: flex;
   gap: 20px;
 }
@@ -315,6 +387,7 @@ const getImageUrl = (sourceName) => {
   border: 1px solid #eee;
   border-radius: 4px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .product-image img {
@@ -351,6 +424,91 @@ const getImageUrl = (sourceName) => {
   margin-top: 20px;
   display: flex;
   gap: 10px;
+}
+
+/* 右侧推荐侧边栏 */
+.recommend-sidebar {
+  width: 240px;
+  border-left: 1px solid #ebeef5;
+  padding-left: 20px;
+  flex-shrink: 0;
+}
+
+.recommend-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #409eff;
+}
+
+.recommend-title .el-icon {
+  color: #409eff;
+}
+
+.recommend-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.recommend-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-bottom: 8px;
+}
+
+.recommend-item:hover {
+  background-color: #f5f7fa;
+}
+
+.recommend-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #eee;
+}
+
+.recommend-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recommend-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recommend-name {
+  font-size: 13px;
+  color: #303133;
+  line-height: 1.4;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recommend-price {
+  font-size: 14px;
+  color: #f56c6c;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.recommend-count {
+  font-size: 12px;
+  color: #909399;
 }
 
 .quantity-selector {

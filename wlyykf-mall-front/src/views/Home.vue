@@ -19,7 +19,8 @@
     <ProductDetail 
       v-model="isProductDetailVisible" 
       :product-id="selectedProductId" 
-      @close="closeProductDetail" 
+      @close="closeProductDetail"
+      @change-product="changeProduct"
     />
   </div>
 </template>
@@ -84,6 +85,17 @@ const showProductDetail = (productId) => {
 const closeProductDetail = () => {
   isProductDetailVisible.value = false
   selectedProductId.value = null
+}
+
+// 切换到新商品（从推荐列表点击）
+const changeProduct = (productId) => {
+  // 先关闭当前弹窗，然后重新打开新商品
+  selectedProductId.value = null
+  // 使用 nextTick 确保 DOM 更新后再设置新商品ID
+  nextTick(() => {
+    selectedProductId.value = String(productId)
+    isProductDetailVisible.value = true
+  })
 }
 
 // 处理显示商品事件
