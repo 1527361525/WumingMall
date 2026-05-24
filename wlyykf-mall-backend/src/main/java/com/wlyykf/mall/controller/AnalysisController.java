@@ -7,9 +7,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
@@ -57,5 +59,44 @@ public class AnalysisController {
     public ResponseVO<List<Map<String, Object>>> getUserPreference(
             @PathVariable @NotNull(message = "用户ID不能为空") Long userId) {
         return analysisService.getUserPreference(userId);
+    }
+
+    /**
+     * 销售趋势统计
+     * 支持日/周/月三种时间粒度：
+     * - day: 最近7天每日销售数据
+     * - week: 最近5周每周销售数据
+     * - month: 最近12个月每月销售数据
+     * @param type 时间类型：day/week/month
+     * @return 销售趋势数据列表
+     */
+    @GetMapping("/sales/trend")
+    public ResponseVO<List<Map<String, Object>>> getSalesTrend(
+            @RequestParam @NotBlank(message = "时间类型不能为空") String type) {
+        return analysisService.getSalesTrend(type);
+    }
+
+    /**
+     * 商品销售趋势统计
+     * 获取指定商品的销售趋势数据
+     * @param productId 商品ID
+     * @param type 时间类型：day(最近7天)/week(最近5周)/month(最近12个月)
+     * @return 商品销售趋势数据
+     */
+    @GetMapping("/product/trend/{productId}")
+    public ResponseVO<List<Map<String, Object>>> getProductTrend(
+            @PathVariable @NotNull(message = "商品ID不能为空") Long productId,
+            @RequestParam @NotBlank(message = "时间类型不能为空") String type) {
+        return analysisService.getProductTrend(productId, type);
+    }
+
+    /**
+     * 类别销售统计
+     * 统计各商品类别的销售数据（包括销售额、销售量、订单数）
+     * @return 各类别销售统计数据
+     */
+    @GetMapping("/category/sales")
+    public ResponseVO<List<Map<String, Object>>> getCategorySales() {
+        return analysisService.getCategorySales();
     }
 }

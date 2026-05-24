@@ -29,4 +29,49 @@ public interface AnalysisMapper {
      * @return 各分类购买数量
      */
     List<Map<String, Object>> getUserCategoryPreference(@Param("userId") Long userId);
+
+    /**
+     * 获取销售趋势统计（日趋势-最近7天）
+     * @return 每日销售数据
+     */
+    List<Map<String, Object>> getSalesTrendDaily();
+
+    /**
+     * 获取销售趋势统计（周趋势-最近5周）
+     * @return 每周销售数据
+     */
+    List<Map<String, Object>> getSalesTrendWeekly();
+
+    /**
+     * 获取销售趋势统计（月趋势-最近12个月）
+     * @return 每月销售数据
+     */
+    List<Map<String, Object>> getSalesTrendMonthly();
+
+    /**
+     * 获取商品销售趋势（日趋势-最近7天）
+     * @param productId 商品ID
+     * @return 商品每日销售数据
+     */
+    List<Map<String, Object>> getProductTrendDaily(@Param("productId") Long productId);
+
+    /**
+     * 获取商品销售趋势（周趋势-最近5周）
+     * @param productId 商品ID
+     * @return 商品每周销售数据
+     */
+    List<Map<String, Object>> getProductTrendWeekly(@Param("productId") Long productId);
+
+    /**
+     * 获取商品销售趋势（月趋势-最近12个月）
+     * @param productId 商品ID
+     * @return 商品每月销售数据
+     */
+    List<Map<String, Object>> getProductTrendMonthly(@Param("productId") Long productId);
+
+    /**
+     * 获取类别销售统计
+     * @return 各类别销售数据
+     */
+    List<Map<String, Object>> getCategorySalesStats();
 }

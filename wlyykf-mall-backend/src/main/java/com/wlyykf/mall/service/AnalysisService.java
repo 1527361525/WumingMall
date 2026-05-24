@@ -28,4 +28,25 @@ public interface AnalysisService {
      * @return 各分类购买数量统计
      */
     ResponseVO<List<Map<String, Object>>> getUserPreference(Long userId);
+
+    /**
+     * 获取销售趋势统计
+     * @param type 时间类型：day-日趋势(最近7天), week-周趋势(最近5周), month-月趋势(最近12个月)
+     * @return 销售趋势数据列表
+     */
+    ResponseVO<List<Map<String, Object>>> getSalesTrend(String type);
+
+    /**
+     * 获取商品销售趋势
+     * @param productId 商品ID
+     * @param type 时间类型：day-日趋势(最近7天), week-周趋势(最近5周), month-月趋势(最近12个月)
+     * @return 商品销售趋势数据
+     */
+    ResponseVO<List<Map<String, Object>>> getProductTrend(Long productId, String type);
+
+    /**
+     * 获取类别销售统计
+     * @return 各类别销售数据
+     */
+    ResponseVO<List<Map<String, Object>>> getCategorySales();
 }

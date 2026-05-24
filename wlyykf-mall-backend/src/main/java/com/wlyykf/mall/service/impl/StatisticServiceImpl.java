@@ -58,6 +58,14 @@ public class StatisticServiceImpl implements StatisticService {
         return ResponseVO.success("查询成功", orderCountList);
     }
 
+    @Override
+    public ResponseVO<List<ProductVO>> getProductTopNByCategory(Integer type, Integer n, Long categoryId) {
+        LocalDate endDate = LocalDate.now().plusDays(1);
+        LocalDate startDate = getStartDate(type);
+        List<ProductVO> productVOList = orderItemMapper.getProductTopNByCategory(startDate, endDate, n, categoryId);
+        return ResponseVO.success("查询成功", productVOList);
+    }
+
     /**
      * 根据查询时间类型返回对应起始日期
      * @param type 查询时间类型 1-日 2-周 3-月 4-年

@@ -49,6 +49,20 @@ public class StatisticController {
     }
 
     /**
+     * 获取指定类别下销量前n的商品
+     * @param type 1-日 2-周 3-月 4-年
+     * @param n 前n
+     * @param categoryId 类别ID
+     * @return 销售量前N的商品列表
+     */
+    @GetMapping("/getProductTopNByCategory")
+    public ResponseVO<List<ProductVO>> getProductTopNByCategory(@RequestParam @NotNull Integer type,
+                                                                 @RequestParam @NotNull Integer n,
+                                                                 @RequestParam @NotNull Long categoryId) {
+        return statisticService.getProductTopNByCategory(type, n, categoryId);
+    }
+
+    /**
      * 获取所有类型的订单数量
      * @param type 1-日 2-周 3-月 4-年
      * @return 包含类型名和数量的订单列表

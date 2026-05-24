@@ -8,6 +8,9 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const regionDistribution = ref([])
   const purchasingPower = ref([])
   const userPreference = ref([])
+  const salesTrend = ref([])
+  const productTrend = ref([])
+  const categorySales = ref([])
   const loading = ref(false)
   const error = ref(null)
 
@@ -92,17 +95,106 @@ export const useAnalysisStore = defineStore('analysis', () => {
     }
   }
 
+  // 获取销售趋势
+  const fetchSalesTrend = async (type) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.get('/analysis/sales/trend', {
+        params: { type },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        salesTrend.value = response.data.data || []
+      } else {
+        throw new Error(response.data.info || '获取销售趋势失败')
+      }
+      
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '获取销售趋势失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 获取商品销售趋势
+  const fetchProductTrend = async (productId, type) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.get(`/analysis/product/trend/${productId}`, {
+        params: { type },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        productTrend.value = response.data.data || []
+      } else {
+        throw new Error(response.data.info || '获取商品销售趋势失败')
+      }
+      
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '获取商品销售趋势失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 获取类别销售统计
+  const fetchCategorySales = async () => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.get('/analysis/category/sales', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        categorySales.value = response.data.data || []
+      } else {
+        throw new Error(response.data.info || '获取类别销售统计失败')
+      }
+      
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '获取类别销售统计失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // 状态
     regionDistribution,
     purchasingPower,
     userPreference,
+    salesTrend,
+    productTrend,
+    categorySales,
     loading,
     error,
     
     // 方法
     fetchRegionDistribution,
     fetchPurchasingPower,
-    fetchUserPreference
+    fetchUserPreference,
+    fetchSalesTrend,
+    fetchProductTrend,
+    fetchCategorySales
   }
 })

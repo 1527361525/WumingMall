@@ -14,4 +14,17 @@ public interface OrderItemMapper extends BaseMapper<OrderItem> {
     List<OrderItemVO> getOrderItemByOrderId(@Param("orderId") Long orderId);
 
     List<ProductVO> getProductTopN(@Param("startDate") LocalDate startDate,@Param("endDate") LocalDate endDate,@Param("topN") Integer n);
+
+    /**
+     * 获取指定类别下销量前N的商品
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param topN 前N个
+     * @param categoryId 类别ID
+     * @return 商品列表
+     */
+    List<ProductVO> getProductTopNByCategory(@Param("startDate") LocalDate startDate,
+                                             @Param("endDate") LocalDate endDate,
+                                             @Param("topN") Integer n,
+                                             @Param("categoryId") Long categoryId);
 }

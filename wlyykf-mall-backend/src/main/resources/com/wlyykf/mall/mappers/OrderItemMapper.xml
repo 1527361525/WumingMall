@@ -43,4 +43,35 @@
         LIMIT #{topN}
     </select>
 
+    <select id="getProductTopNByCategory" resultType="com.wlyykf.mall.vo.ProductVO">
+        SELECT
+            oi.product_id AS productId,
+            oi.product_name AS name,
+            oi.product_image AS productImage,
+            SUM(oi.quantity) AS totalSales
+        FROM
+            tb_order_item oi
+        INNER JOIN
+            tb_order o
+        ON oi.order_id = o.order_id
+        INNER JOIN
+            tb_product p
+        ON oi.product_id = p.product_id
+        WHERE
+            o.payment_time IS NOT NULL
+            AND o.del_flag = 0
+            AND oi.del_flag = 0
+            AND p.del_flag = 0
+            AND p.category_id = #{categoryId}
+        <if test="startDate != null">
+            AND o.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND o.create_time &lt; #{endDate}
+        </if>
+        GROUP BY oi.product_id, oi.product_name, oi.product_image
+        ORDER BY totalSales DESC
+        LIMIT #{topN}
+    </select>
+
 </mapper>
