@@ -74,4 +74,22 @@ public interface AnalysisMapper {
      * @return 各类别销售数据
      */
     List<Map<String, Object>> getCategorySalesStats();
+
+    /**
+     * 获取今日实时销售数据（从当日0点到当前时间）
+     * @return 今日订单数和销售额
+     */
+    Map<String, Object> getTodayRealtimeSales();
+
+    /**
+     * 获取昨日同期销售数据（昨日0点到当前时间的对应时刻）
+     * @return 昨日同期订单数和销售额
+     */
+    Map<String, Object> getYesterdaySamePeriodSales();
+
+    /**
+     * 获取上周同日销售数据（上周同日0点到24点）
+     * @return 上周同日订单数和销售额
+     */
+    Map<String, Object> getLastWeekSameDaySales();
 }

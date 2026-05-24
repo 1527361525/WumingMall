@@ -224,34 +224,38 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { 
-  Warning, CircleClose, SuccessFilled, Timer, 
-  VideoPlay, Refresh, Setting 
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
+import {
+  Warning, CircleClose, SuccessFilled, Timer,
+  VideoPlay, Refresh, Setting
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
+// 获取 axios 实例
+const { proxy } = getCurrentInstance()
+const axios = proxy.$axios
+
 // 异常概览
 const abnormalOverview = reactive({
-  warningCount: 3,
-  errorCount: 1,
-  normalCount: 15,
-  monitorRate: '5分钟'
+  warningCount: 0,
+  errorCount: 0,
+  normalCount: 0,
+  monitorRate: '实时'
 })
 
 // 实时数据
 const realtimeData = reactive({
-  todayAmount: '45,280.00',
-  amountCompare: -15.2,
-  amountProgress: 85,
-  amountStatus: 'exception',
-  todayOrders: 156,
-  orderCompare: -8.5,
-  orderProgress: 70,
-  orderStatus: 'warning',
-  todayAvg: '290.26',
-  avgCompare: 3.2,
-  avgProgress: 92,
+  todayAmount: '0.00',
+  amountCompare: 0,
+  amountProgress: 0,
+  amountStatus: 'success',
+  todayOrders: 0,
+  orderCompare: 0,
+  orderProgress: 0,
+  orderStatus: 'success',
+  todayAvg: '0.00',
+  avgCompare: 0,
+  avgProgress: 0,
   avgStatus: 'success'
 })
 
@@ -263,47 +267,10 @@ const loading = ref(false)
 // 分页
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(4)
+const total = ref(0)
 
 // 异常列表
-const abnormalList = ref([
-  {
-    time: '2024-01-15 14:30:00',
-    type: '销售额',
-    currentValue: '¥45,280',
-    expectedValue: '¥53,388',
-    deviation: -15.2,
-    level: 'error',
-    description: '今日销售额较昨日下降超过15%，触发异常告警'
-  },
-  {
-    time: '2024-01-15 14:30:00',
-    type: '订单数',
-    currentValue: '156',
-    expectedValue: '170',
-    deviation: -8.5,
-    level: 'warning',
-    description: '今日订单数较昨日下降8.5%，触发预警'
-  },
-  {
-    time: '2024-01-14 10:15:00',
-    type: '订单数',
-    currentValue: '185',
-    expectedValue: '160',
-    deviation: 15.6,
-    level: 'warning',
-    description: '订单量激增，较预期高15.6%'
-  },
-  {
-    time: '2024-01-13 16:45:00',
-    type: '销售额',
-    currentValue: '¥62,150',
-    expectedValue: '¥52,000',
-    deviation: 19.5,
-    level: 'warning',
-    description: '销售额异常增长，较预期高19.5%'
-  }
-])
+const abnormalList = ref([])
 
 // 阈值配置对话框
 const thresholdDialogVisible = ref(false)
@@ -328,9 +295,201 @@ const getRowClass = (row) => {
   return row.level === 'error' ? 'text-danger' : 'text-warning'
 }
 
+// 格式化金额
+const formatAmount = (amount) => {
+  return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// 获取异常检测数据
+const fetchAbnormalDetection = async () => {
+  try {
+    const response = await axios.get('/analysis/abnormal/sales', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    const { status, data } = response.data
+    if (status === 0 && data) {
+      // 更新概览统计
+      let warningCount = 0
+      let errorCount = 0
+
+      // 检查环比异常
+      if (data.dayOverDayChange) {
+        if (data.dayOverDayChange.isOrderCountAbnormal || data.dayOverDayChange.isSalesAmountAbnormal) {
+          errorCount++
+        }
+      }
+      // 检查同比异常
+      if (data.weekOverWeekChange) {
+        if (data.weekOverWeekChange.isOrderCountAbnormal || data.weekOverWeekChange.isSalesAmountAbnormal) {
+          errorCount++
+        }
+      }
+
+      // 设置概览数据
+      abnormalOverview.warningCount = warningCount
+      abnormalOverview.errorCount = errorCount
+      abnormalOverview.normalCount = errorCount === 0 ? 2 : 0
+      abnormalOverview.monitorRate = '实时'
+
+      // 构建异常列表
+      const list = []
+      const now = new Date().toLocaleString('zh-CN')
+
+      // 环比异常
+      if (data.dayOverDayChange) {
+        const dayChange = data.dayOverDayChange
+        const today = data.today
+        const yesterday = data.yesterday
+
+        // 销售额环比异常
+        if (dayChange.isSalesAmountAbnormal) {
+          const deviation = dayChange.salesAmountChangeRate
+          list.push({
+            time: now,
+            type: '销售额(环比)',
+            currentValue: '¥' + formatAmount(today.salesAmount),
+            expectedValue: '¥' + formatAmount(yesterday.salesAmount),
+            deviation: deviation,
+            level: Math.abs(deviation) >= 50 ? 'error' : 'warning',
+            description: `今日销售额较昨日同期${deviation > 0 ? '增长' : '下降'}${Math.abs(deviation).toFixed(2)}%，触发异常告警`
+          })
+        }
+
+        // 订单数环比异常
+        if (dayChange.isOrderCountAbnormal) {
+          const deviation = dayChange.orderCountChangeRate
+          list.push({
+            time: now,
+            type: '订单数(环比)',
+            currentValue: today.orderCount.toString(),
+            expectedValue: yesterday.orderCount.toString(),
+            deviation: deviation,
+            level: Math.abs(deviation) >= 50 ? 'error' : 'warning',
+            description: `今日订单数较昨日同期${deviation > 0 ? '增长' : '下降'}${Math.abs(deviation).toFixed(2)}%，触发异常告警`
+          })
+        }
+      }
+
+      // 同比异常
+      if (data.weekOverWeekChange) {
+        const weekChange = data.weekOverWeekChange
+        const today = data.today
+        const lastWeek = data.lastWeekSameDay
+
+        // 销售额同比异常
+        if (weekChange.isSalesAmountAbnormal) {
+          const deviation = weekChange.salesAmountChangeRate
+          list.push({
+            time: now,
+            type: '销售额(同比)',
+            currentValue: '¥' + formatAmount(today.salesAmount),
+            expectedValue: '¥' + formatAmount(lastWeek.salesAmount),
+            deviation: deviation,
+            level: Math.abs(deviation) >= 50 ? 'error' : 'warning',
+            description: `今日销售额较上周同日${deviation > 0 ? '增长' : '下降'}${Math.abs(deviation).toFixed(2)}%，触发异常告警`
+          })
+        }
+
+        // 订单数同比异常
+        if (weekChange.isOrderCountAbnormal) {
+          const deviation = weekChange.orderCountChangeRate
+          list.push({
+            time: now,
+            type: '订单数(同比)',
+            currentValue: today.orderCount.toString(),
+            expectedValue: lastWeek.orderCount.toString(),
+            deviation: deviation,
+            level: Math.abs(deviation) >= 50 ? 'error' : 'warning',
+            description: `今日订单数较上周同日${deviation > 0 ? '增长' : '下降'}${Math.abs(deviation).toFixed(2)}%，触发异常告警`
+          })
+        }
+      }
+
+      abnormalList.value = list
+      total.value = list.length
+
+      // 更新阈值显示
+      if (data.threshold) {
+        thresholdForm.amountThreshold = data.threshold
+        thresholdForm.orderThreshold = data.threshold
+      }
+    }
+  } catch (error) {
+    ElMessage.error('获取异常检测数据失败')
+    console.error('获取异常检测数据失败:', error)
+  }
+}
+
+// 获取实时数据
+const fetchRealtimeData = async () => {
+  try {
+    const response = await axios.get('/analysis/abnormal/realtime', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    const { status, data } = response.data
+    if (status === 0 && data) {
+      // 更新实时数据
+      realtimeData.todayAmount = formatAmount(data.salesAmount)
+      realtimeData.todayOrders = data.orderCount
+
+      // 计算客单价
+      const avgPrice = data.orderCount > 0 ? data.salesAmount / data.orderCount : 0
+      realtimeData.todayAvg = formatAmount(avgPrice)
+
+      // 获取对比数据计算变化率
+      const abnormalRes = await axios.get('/analysis/abnormal/sales', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if (abnormalRes.data.status === 0 && abnormalRes.data.data) {
+        const abnormalData = abnormalRes.data.data
+
+        // 更新环比数据
+        if (abnormalData.dayOverDayChange) {
+          realtimeData.amountCompare = abnormalData.dayOverDayChange.salesAmountChangeRate || 0
+          realtimeData.orderCompare = abnormalData.dayOverDayChange.orderCountChangeRate || 0
+        }
+
+        // 计算平均客单价变化
+        const todayAvg = data.orderCount > 0 ? data.salesAmount / data.orderCount : 0
+        const yesterdayOrderCount = abnormalData.yesterday?.orderCount || 0
+        const yesterdaySalesAmount = abnormalData.yesterday?.salesAmount || 0
+        const yesterdayAvg = yesterdayOrderCount > 0 ? yesterdaySalesAmount / yesterdayOrderCount : 0
+
+        if (yesterdayAvg > 0) {
+          realtimeData.avgCompare = ((todayAvg - yesterdayAvg) / yesterdayAvg) * 100
+        } else {
+          realtimeData.avgCompare = 0
+        }
+
+        // 更新状态
+        const threshold = abnormalData.threshold || 30
+        realtimeData.amountStatus = Math.abs(realtimeData.amountCompare) >= threshold ? 'exception' : 'success'
+        realtimeData.orderStatus = Math.abs(realtimeData.orderCompare) >= threshold ? 'warning' : 'success'
+        realtimeData.avgStatus = Math.abs(realtimeData.avgCompare) >= threshold ? 'warning' : 'success'
+
+        // 更新进度条
+        realtimeData.amountProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.amountCompare)))
+        realtimeData.orderProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.orderCompare)))
+        realtimeData.avgProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.avgCompare)))
+      }
+
+      ElMessage.success('实时数据已刷新')
+    }
+  } catch (error) {
+    ElMessage.error('获取实时数据失败')
+    console.error('获取实时数据失败:', error)
+  }
+}
+
 // 刷新实时数据
 const refreshRealtimeData = () => {
-  ElMessage.success('实时数据已刷新')
+  fetchRealtimeData()
 }
 
 // 显示阈值配置
@@ -340,7 +499,7 @@ const showThresholdConfig = () => {
 
 // 保存阈值
 const saveThreshold = () => {
-  ElMessage.success('阈值配置已保存')
+  ElMessage.success('阈值配置已保存(仅前端展示，后端阈值为30%)')
   thresholdDialogVisible.value = false
 }
 
@@ -359,11 +518,10 @@ const handleCurrentChange = (val) => {
 }
 
 onMounted(() => {
-  // 模拟加载数据
   loading.value = true
-  setTimeout(() => {
+  Promise.all([fetchAbnormalDetection(), fetchRealtimeData()]).finally(() => {
     loading.value = false
-  }, 500)
+  })
 })
 </script>
 

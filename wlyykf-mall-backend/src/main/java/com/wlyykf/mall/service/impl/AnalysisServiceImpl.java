@@ -1,5 +1,6 @@
 package com.wlyykf.mall.service.impl;
 
+import com.wlyykf.mall.config.AbnormalMonitorConfig;
 import com.wlyykf.mall.mappers.AnalysisMapper;
 import com.wlyykf.mall.service.AnalysisService;
 import com.wlyykf.mall.utils.IpRegionUtil;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -26,6 +28,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     @Resource
     private IpRegionUtil ipRegionUtil;
+
+    @Resource
+    private AbnormalMonitorConfig abnormalMonitorConfig;
 
     @Override
     public ResponseVO<List<Map<String, Object>>> getUserRegionDistribution() {
@@ -214,7 +219,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     private List<Map<String, Object>> fillMissingDailyData(List<Map<String, Object>> data, int days) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Map<String, Map<String, Object>> dataMap = new HashMap<>();
-        
+
         // 将已有数据放入Map
         if (data != null) {
             for (Map<String, Object> item : data) {
@@ -224,13 +229,13 @@ public class AnalysisServiceImpl implements AnalysisService {
                 }
             }
         }
-        
+
         // 生成最近days天的日期列表
         List<Map<String, Object>> result = new ArrayList<>();
         for (int i = days - 1; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
             String dateStr = date.format(formatter);
-            
+
             Map<String, Object> item = dataMap.get(dateStr);
             if (item == null) {
                 // 补充缺失的日期数据
@@ -242,7 +247,169 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
             result.add(item);
         }
-        
+
         return result;
+    }
+
+    @Override
+    public ResponseVO<Map<String, Object>> getSalesAbnormalDetection() {
+        try {
+            // 获取今日实时数据
+            Map<String, Object> todayData = analysisMapper.getTodayRealtimeSales();
+            // 获取昨日同期数据
+            Map<String, Object> yesterdayData = analysisMapper.getYesterdaySamePeriodSales();
+            // 获取上周同日数据
+            Map<String, Object> lastWeekData = analysisMapper.getLastWeekSameDaySales();
+
+            // 提取数值
+            long todayOrderCount = extractLongValue(todayData.get("order_count"));
+            double todaySalesAmount = extractDoubleValue(todayData.get("sales_amount"));
+
+            long yesterdayOrderCount = extractLongValue(yesterdayData.get("order_count"));
+            double yesterdaySalesAmount = extractDoubleValue(yesterdayData.get("sales_amount"));
+
+            long lastWeekOrderCount = extractLongValue(lastWeekData.get("order_count"));
+            double lastWeekSalesAmount = extractDoubleValue(lastWeekData.get("sales_amount"));
+
+            // 计算环比（今日 vs 昨日同期）波动率
+            double orderCountChangeRate = calculateChangeRate(todayOrderCount, yesterdayOrderCount);
+            double salesAmountChangeRate = calculateChangeRate(todaySalesAmount, yesterdaySalesAmount);
+
+            // 计算同比（今日 vs 上周同日）波动率
+            double orderCountChangeRateWeek = calculateChangeRate(todayOrderCount, lastWeekOrderCount);
+            double salesAmountChangeRateWeek = calculateChangeRate(todaySalesAmount, lastWeekSalesAmount);
+
+            // 获取阈值
+            double threshold = abnormalMonitorConfig.getThreshold();
+
+            // 判断是否异常（波动超过阈值）
+            boolean isOrderCountAbnormal = Math.abs(orderCountChangeRate) >= threshold;
+            boolean isSalesAmountAbnormal = Math.abs(salesAmountChangeRate) >= threshold;
+            boolean isOrderCountAbnormalWeek = Math.abs(orderCountChangeRateWeek) >= threshold;
+            boolean isSalesAmountAbnormalWeek = Math.abs(salesAmountChangeRateWeek) >= threshold;
+
+            // 构建结果
+            Map<String, Object> result = new HashMap<>();
+
+            // 今日数据
+            Map<String, Object> todayMap = new HashMap<>();
+            todayMap.put("orderCount", todayOrderCount);
+            todayMap.put("salesAmount", todaySalesAmount);
+            result.put("today", todayMap);
+
+            // 昨日同期数据
+            Map<String, Object> yesterdayMap = new HashMap<>();
+            yesterdayMap.put("orderCount", yesterdayOrderCount);
+            yesterdayMap.put("salesAmount", yesterdaySalesAmount);
+            result.put("yesterday", yesterdayMap);
+
+            // 上周同日数据
+            Map<String, Object> lastWeekMap = new HashMap<>();
+            lastWeekMap.put("orderCount", lastWeekOrderCount);
+            lastWeekMap.put("salesAmount", lastWeekSalesAmount);
+            result.put("lastWeekSameDay", lastWeekMap);
+
+            // 环比波动（今日 vs 昨日）
+            Map<String, Object> dayChangeMap = new HashMap<>();
+            dayChangeMap.put("orderCountChangeRate", roundToTwoDecimals(orderCountChangeRate));
+            dayChangeMap.put("salesAmountChangeRate", roundToTwoDecimals(salesAmountChangeRate));
+            dayChangeMap.put("isOrderCountAbnormal", isOrderCountAbnormal);
+            dayChangeMap.put("isSalesAmountAbnormal", isSalesAmountAbnormal);
+            result.put("dayOverDayChange", dayChangeMap);
+
+            // 同比波动（今日 vs 上周同日）
+            Map<String, Object> weekChangeMap = new HashMap<>();
+            weekChangeMap.put("orderCountChangeRate", roundToTwoDecimals(orderCountChangeRateWeek));
+            weekChangeMap.put("salesAmountChangeRate", roundToTwoDecimals(salesAmountChangeRateWeek));
+            weekChangeMap.put("isOrderCountAbnormal", isOrderCountAbnormalWeek);
+            weekChangeMap.put("isSalesAmountAbnormal", isSalesAmountAbnormalWeek);
+            result.put("weekOverWeekChange", weekChangeMap);
+
+            // 异常检测阈值
+            result.put("threshold", threshold);
+
+            // 总体异常状态
+            boolean hasAbnormal = isOrderCountAbnormal || isSalesAmountAbnormal ||
+                    isOrderCountAbnormalWeek || isSalesAmountAbnormalWeek;
+            result.put("hasAbnormal", hasAbnormal);
+
+            return ResponseVO.success(result);
+        } catch (Exception e) {
+            log.error("获取销售异常检测结果失败", e);
+            return ResponseVO.fail("获取销售异常检测结果失败", null);
+        }
+    }
+
+    @Override
+    public ResponseVO<Map<String, Object>> getTodayRealtimeData() {
+        try {
+            Map<String, Object> todayData = analysisMapper.getTodayRealtimeSales();
+
+            // 处理数值类型
+            long orderCount = extractLongValue(todayData.get("order_count"));
+            double salesAmount = extractDoubleValue(todayData.get("sales_amount"));
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("orderCount", orderCount);
+            result.put("salesAmount", salesAmount);
+            result.put("date", LocalDate.now().toString());
+
+            return ResponseVO.success(result);
+        } catch (Exception e) {
+            log.error("获取今日实时数据失败", e);
+            return ResponseVO.fail("获取今日实时数据失败", null);
+        }
+    }
+
+    /**
+     * 计算变化率（百分比）
+     * @param current 当前值
+     * @param previous 对比值
+     * @return 变化率，单位：%
+     */
+    private double calculateChangeRate(double current, double previous) {
+        if (previous == 0) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+        return ((current - previous) / previous) * 100;
+    }
+
+    /**
+     * 从对象中提取 Long 值
+     */
+    private long extractLongValue(Object value) {
+        if (value == null) {
+            return 0L;
+        }
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        return 0L;
+    }
+
+    /**
+     * 从对象中提取 Double 值
+     */
+    private double extractDoubleValue(Object value) {
+        if (value == null) {
+            return 0.0;
+        }
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).doubleValue();
+        }
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        return 0.0;
+    }
+
+    /**
+     * 保留两位小数
+     */
+    private double roundToTwoDecimals(double value) {
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }

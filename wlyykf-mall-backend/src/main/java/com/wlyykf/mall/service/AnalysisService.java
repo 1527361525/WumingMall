@@ -49,4 +49,17 @@ public interface AnalysisService {
      * @return 各类别销售数据
      */
     ResponseVO<List<Map<String, Object>>> getCategorySales();
+
+    /**
+     * 获取销售异常检测结果
+     * 检测今日销售额和订单量相比昨日同期的波动情况
+     * @return 异常检测结果，包含今日数据、昨日数据、波动率及是否异常标记
+     */
+    ResponseVO<Map<String, Object>> getSalesAbnormalDetection();
+
+    /**
+     * 获取今日实时销售数据
+     * @return 今日实时累计订单数和销售额
+     */
+    ResponseVO<Map<String, Object>> getTodayRealtimeData();
 }

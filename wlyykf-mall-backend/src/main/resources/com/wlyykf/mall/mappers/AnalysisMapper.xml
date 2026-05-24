@@ -183,4 +183,40 @@
         ORDER BY sales_amount DESC
     </select>
 
+    <!-- 获取今日实时销售数据（从当日0点到当前时间） -->
+    <select id="getTodayRealtimeSales" resultType="java.util.HashMap">
+        SELECT
+            COUNT(DISTINCT o.order_id) AS order_count,
+            COALESCE(SUM(o.total_amount), 0) AS sales_amount
+        FROM tb_order o
+        WHERE o.order_status = 1
+          AND o.del_flag = 0
+          AND o.payment_time &gt;= CURDATE()
+          AND o.payment_time &lt; NOW()
+    </select>
+
+    <!-- 获取昨日同期销售数据（昨日0点到当前时间的对应时刻） -->
+    <select id="getYesterdaySamePeriodSales" resultType="java.util.HashMap">
+        SELECT
+            COUNT(DISTINCT o.order_id) AS order_count,
+            COALESCE(SUM(o.total_amount), 0) AS sales_amount
+        FROM tb_order o
+        WHERE o.order_status = 1
+          AND o.del_flag = 0
+          AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+          AND o.payment_time &lt; DATE_SUB(NOW(), INTERVAL 1 DAY)
+    </select>
+
+    <!-- 获取上周同日销售数据（上周同日0点到24点） -->
+    <select id="getLastWeekSameDaySales" resultType="java.util.HashMap">
+        SELECT
+            COUNT(DISTINCT o.order_id) AS order_count,
+            COALESCE(SUM(o.total_amount), 0) AS sales_amount
+        FROM tb_order o
+        WHERE o.order_status = 1
+          AND o.del_flag = 0
+          AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+          AND o.payment_time &lt; DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+    </select>
+
 </mapper>

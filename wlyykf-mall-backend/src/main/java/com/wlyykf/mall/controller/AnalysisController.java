@@ -99,4 +99,25 @@ public class AnalysisController {
     public ResponseVO<List<Map<String, Object>>> getCategorySales() {
         return analysisService.getCategorySales();
     }
+
+    /**
+     * 销售异常检测
+     * 检测今日销售额和订单量相比昨日同期及上周同日的波动情况
+     * 波动超过阈值（默认30%）时标记为异常
+     * @return 异常检测结果，包含今日/昨日/上周数据及波动率
+     */
+    @GetMapping("/abnormal/sales")
+    public ResponseVO<Map<String, Object>> getSalesAbnormalDetection() {
+        return analysisService.getSalesAbnormalDetection();
+    }
+
+    /**
+     * 今日实时销售数据
+     * 获取今日累计的订单数和销售额（从0点到当前时间）
+     * @return 今日实时累计数据
+     */
+    @GetMapping("/abnormal/realtime")
+    public ResponseVO<Map<String, Object>> getTodayRealtimeData() {
+        return analysisService.getTodayRealtimeData();
+    }
 }
