@@ -248,4 +248,12 @@ public class UserServiceImpl implements UserService {
         return ResponseVO.fail("删除失败", null);
     }
 
+    @Override
+    public void updateLastLoginIp(Long userId, String ip) {
+        User user = new User();
+        user.setUserId(userId);
+        user.setLastLoginIp(ip);
+        userMapper.updateById(user);
+    }
+
 }

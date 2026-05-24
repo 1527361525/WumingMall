@@ -103,4 +103,11 @@ public interface UserService {
      * @return 删除结果
      */
     ResponseVO<Void> deleteUser(Long userId);
+
+    /**
+     * 更新用户最后登录IP
+     * @param userId 用户ID
+     * @param ip IP地址
+     */
+    void updateLastLoginIp(Long userId, String ip);
 }

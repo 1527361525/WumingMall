@@ -51,10 +51,12 @@ public class UserController {
     @PostMapping("/login")
     public ResponseVO<TokenUserInfoDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         ResponseVO<TokenUserInfoDTO> response = userService.login(loginDTO);
-        // 登录成功后记录登录日志
+        // 登录成功后记录登录日志和更新最后登录IP
         if (response.getCode() != null && response.getCode() == 200 && response.getData() != null) {
             TokenUserInfoDTO userInfo = response.getData();
-            logService.recordLoginLog(userInfo.getUserId(), userInfo.getRole(), getClientIp());
+            String clientIp = getClientIp();
+            logService.recordLoginLog(userInfo.getUserId(), userInfo.getRole(), clientIp);
+            userService.updateLastLoginIp(userInfo.getUserId(), clientIp);
         }
         return response;
     }

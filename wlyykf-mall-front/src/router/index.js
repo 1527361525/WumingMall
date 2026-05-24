@@ -7,6 +7,10 @@ import Order from '@/views/Order.vue'
 import Statistic from '@/views/Statistic.vue'
 import Profile from '@/views/Profile.vue'
 import User from '@/views/User.vue'
+import DataAnalysis from '@/views/DataAnalysis/index.vue'
+import UserPortrait from '@/views/DataAnalysis/UserPortrait.vue'
+import SalesTrend from '@/views/DataAnalysis/SalesTrend.vue'
+import AbnormalMonitor from '@/views/DataAnalysis/AbnormalMonitor.vue'
 
 
 const routes = [
@@ -63,6 +67,33 @@ const routes = [
     name: 'User',
     component: User,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/data-analysis',
+    name: 'DataAnalysis',
+    component: DataAnalysis,
+    meta: { requiresAuth: true },
+    redirect: '/data-analysis/user-portrait',
+    children: [
+      {
+        path: 'user-portrait',
+        name: 'UserPortrait',
+        component: UserPortrait,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'sales-trend',
+        name: 'SalesTrend',
+        component: SalesTrend,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'abnormal-monitor',
+        name: 'AbnormalMonitor',
+        component: AbnormalMonitor,
+        meta: { requiresAuth: true }
+      }
+    ]
   },
 ]
 

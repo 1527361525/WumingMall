@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wlyykf.mall.mappers.AnalysisMapper">
+
+    <!-- 获取所有用户的最后登录IP -->
+    <select id="getUserLastLoginIps" resultType="java.util.HashMap">
+        SELECT
+            user_id AS user_id,
+            last_login_ip AS last_login_ip
+        FROM tb_user
+        WHERE del_flag = 0
+          AND last_login_ip IS NOT NULL
+          AND last_login_ip != ''
+    </select>
+
+    <!-- 获取用户购买力分层统计 -->
+    <select id="getUserPurchasingPowerDistribution" resultType="java.util.HashMap">
+        SELECT
+            CASE
+                WHEN total_amount &lt; 100 THEN '低消费'
+                WHEN total_amount &lt; 500 THEN '中消费'
+                ELSE '高消费'
+            END AS level,
+            COUNT(*) AS user_count
+        FROM (
+            SELECT user_id, SUM(total_amount) AS total_amount
+            FROM tb_order
+            WHERE order_status = 1
+              AND del_flag = 0
+            GROUP BY user_id
+        ) t
+        GROUP BY level
+        ORDER BY FIELD(level, '低消费', '中消费', '高消费')
+    </select>
+
+    <!-- 获取用户商品分类偏好统计 -->
+    <select id="getUserCategoryPreference" resultType="java.util.HashMap">
+        SELECT
+            c.name AS category_name,
+            SUM(oi.quantity) AS buy_count
+        FROM tb_order_item oi
+        JOIN tb_product p ON oi.product_id = p.product_id
+        JOIN tb_category c ON p.category_id = c.category_id
+        JOIN tb_order o ON oi.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+          AND o.order_status = 1
+          AND o.del_flag = 0
+          AND oi.del_flag = 0
+          AND p.del_flag = 0
+          AND c.del_flag = 0
+        GROUP BY c.category_id, c.name
+        ORDER BY buy_count DESC
+    </select>
+
+</mapper>

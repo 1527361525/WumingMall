@@ -28,4 +28,6 @@ public class User extends BaseEntity {
     private BigDecimal money;
 
     private Integer role;
+
+    private String lastLoginIp;
 }

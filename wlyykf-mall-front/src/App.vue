@@ -16,7 +16,7 @@
               <!-- 只有管理员才显示订单管理和统计菜单 -->
               <template v-if="isAdmin">
                 <router-link to="/order-admin" class="nav-item">订单管理</router-link>
-                <router-link to="/statistic" class="nav-item">统计</router-link>
+                <router-link to="/data-analysis" class="nav-item">数据分析</router-link>
                 <router-link to="/user" class="nav-item">用户管理</router-link>
               </template>
             </nav>

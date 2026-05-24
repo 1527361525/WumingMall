@@ -1,0 +1,548 @@
+<template>
+  <div class="abnormal-monitor-page">
+    <h2 class="page-title">销售异常监控</h2>
+    
+    <!-- 异常概览 -->
+    <el-row :gutter="20" class="overview-row">
+      <el-col :span="6">
+        <el-card class="overview-card warning">
+          <div class="card-icon">
+            <el-icon><Warning /></el-icon>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ abnormalOverview.warningCount }}</div>
+            <div class="card-label">预警项</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card class="overview-card danger">
+          <div class="card-icon">
+            <el-icon><CircleClose /></el-icon>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ abnormalOverview.errorCount }}</div>
+            <div class="card-label">异常项</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card class="overview-card normal">
+          <div class="card-icon">
+            <el-icon><SuccessFilled /></el-icon>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ abnormalOverview.normalCount }}</div>
+            <div class="card-label">正常项</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card class="overview-card info">
+          <div class="card-icon">
+            <el-icon><Timer /></el-icon>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ abnormalOverview.monitorRate }}</div>
+            <div class="card-label">监控频率</div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 实时监控面板 -->
+    <el-card class="realtime-card">
+      <template #header>
+        <div class="card-header">
+          <div class="header-left">
+            <span class="title">实时监控</span>
+            <el-tag type="success" effect="dark" class="status-tag">
+              <el-icon><VideoPlay /></el-icon>监控中
+            </el-tag>
+          </div>
+          <div class="header-right">
+            <el-button type="primary" size="small" @click="refreshRealtimeData">
+              <el-icon><Refresh /></el-icon>刷新
+            </el-button>
+            <el-button type="warning" size="small" @click="showThresholdConfig">
+              <el-icon><Setting /></el-icon>阈值配置
+            </el-button>
+          </div>
+        </div>
+      </template>
+      
+      <div class="realtime-metrics">
+        <el-row :gutter="30">
+          <el-col :span="8">
+            <div class="metric-box">
+              <div class="metric-title">今日销售额</div>
+              <div class="metric-value" :class="getStatusClass(realtimeData.amountStatus)">
+                ¥{{ realtimeData.todayAmount }}
+              </div>
+              <div class="metric-compare">
+                较昨日: 
+                <span :class="realtimeData.amountCompare > 0 ? 'up' : 'down'">
+                  {{ realtimeData.amountCompare > 0 ? '+' : '' }}{{ realtimeData.amountCompare }}%
+                </span>
+              </div>
+              <el-progress 
+                :percentage="realtimeData.amountProgress" 
+                :status="realtimeData.amountStatus"
+                :stroke-width="8"
+              />
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <div class="metric-box">
+              <div class="metric-title">今日订单数</div>
+              <div class="metric-value" :class="getStatusClass(realtimeData.orderStatus)">
+                {{ realtimeData.todayOrders }}
+              </div>
+              <div class="metric-compare">
+                较昨日: 
+                <span :class="realtimeData.orderCompare > 0 ? 'up' : 'down'">
+                  {{ realtimeData.orderCompare > 0 ? '+' : '' }}{{ realtimeData.orderCompare }}%
+                </span>
+              </div>
+              <el-progress 
+                :percentage="realtimeData.orderProgress" 
+                :status="realtimeData.orderStatus"
+                :stroke-width="8"
+              />
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <div class="metric-box">
+              <div class="metric-title">平均客单价</div>
+              <div class="metric-value" :class="getStatusClass(realtimeData.avgStatus)">
+                ¥{{ realtimeData.todayAvg }}
+              </div>
+              <div class="metric-compare">
+                较昨日: 
+                <span :class="realtimeData.avgCompare > 0 ? 'up' : 'down'">
+                  {{ realtimeData.avgCompare > 0 ? '+' : '' }}{{ realtimeData.avgCompare }}%
+                </span>
+              </div>
+              <el-progress 
+                :percentage="realtimeData.avgProgress" 
+                :status="realtimeData.avgStatus"
+                :stroke-width="8"
+              />
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+    </el-card>
+
+    <!-- 异常记录列表 -->
+    <el-card class="abnormal-list-card">
+      <template #header>
+        <div class="card-header">
+          <span>异常记录</span>
+          <div class="filter-group">
+            <el-select v-model="filterStatus" placeholder="异常类型" style="width: 120px; margin-right: 10px;">
+              <el-option label="全部" value="" />
+              <el-option label="预警" value="warning" />
+              <el-option label="异常" value="error" />
+            </el-select>
+            <el-date-picker
+              v-model="filterDate"
+              type="date"
+              placeholder="选择日期"
+              style="width: 150px;"
+            />
+          </div>
+        </div>
+      </template>
+      
+      <el-table :data="abnormalList" style="width: 100%" v-loading="loading">
+        <el-table-column prop="time" label="时间" width="180" />
+        <el-table-column prop="type" label="监控项" width="120" />
+        <el-table-column prop="currentValue" label="当前值" width="150">
+          <template #default="{ row }">
+            <span :class="getRowClass(row)">{{ row.currentValue }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="expectedValue" label="预期值" width="150" />
+        <el-table-column prop="deviation" label="偏差" width="120">
+          <template #default="{ row }">
+            <span :class="row.deviation > 0 ? 'up' : 'down'">
+              {{ row.deviation > 0 ? '+' : '' }}{{ row.deviation }}%
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="level" label="级别" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.level === 'error' ? 'danger' : 'warning'" effect="dark">
+              {{ row.level === 'error' ? '异常' : '预警' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" />
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="handleDetail(row)">详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 阈值配置对话框 -->
+    <el-dialog v-model="thresholdDialogVisible" title="异常阈值配置" width="500px">
+      <el-form :model="thresholdForm" label-width="150px">
+        <el-form-item label="销售额波动阈值">
+          <el-input-number v-model="thresholdForm.amountThreshold" :min="1" :max="100" />
+          <span class="unit">%</span>
+        </el-form-item>
+        <el-form-item label="订单数波动阈值">
+          <el-input-number v-model="thresholdForm.orderThreshold" :min="1" :max="100" />
+          <span class="unit">%</span>
+        </el-form-item>
+        <el-form-item label="客单价波动阈值">
+          <el-input-number v-model="thresholdForm.avgThreshold" :min="1" :max="100" />
+          <span class="unit">%</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="thresholdDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveThreshold">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { 
+  Warning, CircleClose, SuccessFilled, Timer, 
+  VideoPlay, Refresh, Setting 
+} from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+
+// 异常概览
+const abnormalOverview = reactive({
+  warningCount: 3,
+  errorCount: 1,
+  normalCount: 15,
+  monitorRate: '5分钟'
+})
+
+// 实时数据
+const realtimeData = reactive({
+  todayAmount: '45,280.00',
+  amountCompare: -15.2,
+  amountProgress: 85,
+  amountStatus: 'exception',
+  todayOrders: 156,
+  orderCompare: -8.5,
+  orderProgress: 70,
+  orderStatus: 'warning',
+  todayAvg: '290.26',
+  avgCompare: 3.2,
+  avgProgress: 92,
+  avgStatus: 'success'
+})
+
+// 筛选条件
+const filterStatus = ref('')
+const filterDate = ref('')
+const loading = ref(false)
+
+// 分页
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(4)
+
+// 异常列表
+const abnormalList = ref([
+  {
+    time: '2024-01-15 14:30:00',
+    type: '销售额',
+    currentValue: '¥45,280',
+    expectedValue: '¥53,388',
+    deviation: -15.2,
+    level: 'error',
+    description: '今日销售额较昨日下降超过15%，触发异常告警'
+  },
+  {
+    time: '2024-01-15 14:30:00',
+    type: '订单数',
+    currentValue: '156',
+    expectedValue: '170',
+    deviation: -8.5,
+    level: 'warning',
+    description: '今日订单数较昨日下降8.5%，触发预警'
+  },
+  {
+    time: '2024-01-14 10:15:00',
+    type: '订单数',
+    currentValue: '185',
+    expectedValue: '160',
+    deviation: 15.6,
+    level: 'warning',
+    description: '订单量激增，较预期高15.6%'
+  },
+  {
+    time: '2024-01-13 16:45:00',
+    type: '销售额',
+    currentValue: '¥62,150',
+    expectedValue: '¥52,000',
+    deviation: 19.5,
+    level: 'warning',
+    description: '销售额异常增长，较预期高19.5%'
+  }
+])
+
+// 阈值配置对话框
+const thresholdDialogVisible = ref(false)
+const thresholdForm = reactive({
+  amountThreshold: 30,
+  orderThreshold: 30,
+  avgThreshold: 30
+})
+
+// 获取状态样式
+const getStatusClass = (status) => {
+  const map = {
+    'success': 'status-normal',
+    'warning': 'status-warning',
+    'exception': 'status-danger'
+  }
+  return map[status] || ''
+}
+
+// 获取行样式
+const getRowClass = (row) => {
+  return row.level === 'error' ? 'text-danger' : 'text-warning'
+}
+
+// 刷新实时数据
+const refreshRealtimeData = () => {
+  ElMessage.success('实时数据已刷新')
+}
+
+// 显示阈值配置
+const showThresholdConfig = () => {
+  thresholdDialogVisible.value = true
+}
+
+// 保存阈值
+const saveThreshold = () => {
+  ElMessage.success('阈值配置已保存')
+  thresholdDialogVisible.value = false
+}
+
+// 查看详情
+const handleDetail = (row) => {
+  ElMessage.info(`查看${row.type}详情`)
+}
+
+// 分页变化
+const handleSizeChange = (val) => {
+  pageSize.value = val
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
+
+onMounted(() => {
+  // 模拟加载数据
+  loading.value = true
+  setTimeout(() => {
+    loading.value = false
+  }, 500)
+})
+</script>
+
+<style lang="scss" scoped>
+.abnormal-monitor-page {
+  .page-title {
+    margin: 0 0 20px;
+    font-size: 24px;
+    color: #303133;
+  }
+  
+  .overview-row {
+    margin-bottom: 20px;
+    
+    .overview-card {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      
+      .card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        
+        .el-icon {
+          font-size: 24px;
+          color: #fff;
+        }
+      }
+      
+      .card-content {
+        .card-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #303133;
+          margin-bottom: 5px;
+        }
+        
+        .card-label {
+          font-size: 14px;
+          color: #909399;
+        }
+      }
+      
+      &.warning .card-icon {
+        background-color: #e6a23c;
+      }
+      
+      &.danger .card-icon {
+        background-color: #f56c6c;
+      }
+      
+      &.normal .card-icon {
+        background-color: #67c23a;
+      }
+      
+      &.info .card-icon {
+        background-color: #909399;
+      }
+    }
+  }
+  
+  .realtime-card {
+    margin-bottom: 20px;
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        
+        .title {
+          font-weight: bold;
+        }
+        
+        .status-tag {
+          .el-icon {
+            margin-right: 4px;
+          }
+        }
+      }
+      
+      .header-right {
+        display: flex;
+        gap: 10px;
+      }
+    }
+    
+    .realtime-metrics {
+      .metric-box {
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #f5f7fa;
+        
+        .metric-title {
+          font-size: 14px;
+          color: #909399;
+          margin-bottom: 15px;
+        }
+        
+        .metric-value {
+          font-size: 32px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          
+          &.status-normal {
+            color: #67c23a;
+          }
+          
+          &.status-warning {
+            color: #e6a23c;
+          }
+          
+          &.status-danger {
+            color: #f56c6c;
+          }
+        }
+        
+        .metric-compare {
+          font-size: 14px;
+          color: #606266;
+          margin-bottom: 15px;
+          
+          .up {
+            color: #67c23a;
+          }
+          
+          .down {
+            color: #f56c6c;
+          }
+        }
+      }
+    }
+  }
+  
+  .abnormal-list-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .text-danger {
+      color: #f56c6c;
+      font-weight: bold;
+    }
+    
+    .text-warning {
+      color: #e6a23c;
+      font-weight: bold;
+    }
+    
+    .up {
+      color: #67c23a;
+    }
+    
+    .down {
+      color: #f56c6c;
+    }
+    
+    .pagination-wrapper {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.unit {
+  margin-left: 8px;
+  color: #606266;
+}
+</style>
