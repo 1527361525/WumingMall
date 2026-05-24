@@ -145,6 +145,11 @@ export default {
         }
       ]
     }
+
+    // 跳转到销售人员管理页面
+    const goToSalesPerson = () => {
+      router.push('/sales-person')
+    }
     
     return {
       totalAmount,
@@ -156,7 +161,8 @@ export default {
       loadStatistics,
       changeType,
       getImageUrl,
-      getRankClass
+      getRankClass,
+      goToSalesPerson
     }
   }
 }
@@ -241,6 +247,43 @@ export default {
 .rank-third {
   background-color: #cd7f32;
   color: #fff;
+}
+
+/* 管理菜单样式 */
+.admin-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.admin-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.admin-menu {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.sales-person-btn {
+  padding: 10px 20px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.sales-person-btn:hover {
+  background: #40a9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
 }
 
 @media (max-width: 768px) {

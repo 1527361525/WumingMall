@@ -45,4 +45,22 @@
         </if>
     </select>
 
+    <select id="getSalesPersonList" resultType="com.wlyykf.mall.vo.UserVO">
+        SELECT
+            user_id AS userId,
+            nick_name AS nickName,
+            email,
+            phone,
+            avatar,
+            money,
+            role
+        FROM
+            tb_user
+        WHERE
+            del_flag = 0
+            AND role = 1
+        ORDER BY
+            create_time DESC
+    </select>
+
 </mapper>

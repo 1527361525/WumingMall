@@ -173,6 +173,77 @@ public class UserController {
     }
 
     /**
+     * 添加销售人员（仅管理者可操作）
+     * @param email 邮箱
+     * @param nickName 昵称
+     * @param password 密码
+     * @return 添加结果
+     */
+    @PostMapping("/addSalesPerson")
+    public ResponseVO<Void> addSalesPerson(@RequestParam @NotBlank(message = "邮箱不能为空") String email,
+                                           @RequestParam @NotBlank(message = "昵称不能为空") String nickName,
+                                           @RequestParam @NotBlank(message = "密码不能为空") String password) {
+        // 校验当前用户是否为管理者
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() != 2) {
+            return ResponseVO.fail("仅管理者可操作", null);
+        }
+        return userService.addSalesPerson(email, nickName, password);
+    }
+
+    /**
+     * 删除销售人员（仅管理者可操作）
+     * @param userId 销售人员ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/salesPerson/{userId}")
+    public ResponseVO<Void> deleteSalesPerson(@PathVariable @NotNull Long userId) {
+        // 校验当前用户是否为管理者
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() != 2) {
+            return ResponseVO.fail("仅管理者可操作", null);
+        }
+        return userService.deleteSalesPerson(userId);
+    }
+
+    /**
+     * 重置用户密码（仅管理者可操作）
+     * @param userId 用户ID
+     * @param newPassword 新密码
+     * @return 重置结果
+     */
+    @PostMapping("/resetPassword/{userId}")
+    public ResponseVO<Void> resetPassword(@PathVariable @NotNull Long userId,
+                                          @RequestParam @NotBlank(message = "新密码不能为空") String newPassword) {
+        // 校验当前用户是否为管理者
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() != 2) {
+            return ResponseVO.fail("仅管理者可操作", null);
+        }
+        return userService.resetPassword(userId, newPassword);
+    }
+
+    /**
+     * 查询销售人员列表（仅管理者可操作）
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @return 销售人员列表
+     */
+    @GetMapping("/getSalesPersonList")
+    public PageResultVO<UserVO> getSalesPersonList(@RequestParam Integer pageNum,
+                                                   @RequestParam Integer pageSize) {
+        // 校验当前用户是否为管理者
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() != 2) {
+            PageResultVO<UserVO> result = new PageResultVO<>();
+            result.setCode(403);
+            result.setInfo("仅管理者可操作");
+            return result;
+        }
+        return userService.getSalesPersonList(pageNum, pageSize);
+    }
+
+    /**
      * 获取客户端IP地址
      */
     private String getClientIp() {

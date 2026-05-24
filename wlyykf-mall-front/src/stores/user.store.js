@@ -207,6 +207,122 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // ============== 销售人员管理接口 ==============
+
+  // 添加销售人员
+  const addSalesPerson = async (email, nickName, password) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const params = new URLSearchParams()
+      params.append('email', email)
+      params.append('nickName', nickName)
+      params.append('password', password)
+
+      const response = await axios.post('/user/addSalesPerson', params, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+
+      if (response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data.info || '添加销售人员失败')
+      }
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '添加销售人员失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 删除销售人员
+  const deleteSalesPerson = async (userId) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.delete(`/user/salesPerson/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data.info || '删除销售人员失败')
+      }
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '删除销售人员失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 重置用户密码
+  const resetPassword = async (userId, newPassword) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const params = new URLSearchParams()
+      params.append('newPassword', newPassword)
+
+      const response = await axios.post(`/user/resetPassword/${userId}`, params, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+
+      if (response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data.info || '重置密码失败')
+      }
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '重置密码失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 查询销售人员列表
+  const getSalesPersonList = async (pageNum, pageSize) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.get('/user/getSalesPersonList', {
+        params: {
+          pageNum,
+          pageSize
+        },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        return response.data
+      } else {
+        throw new Error(response.data.info || '获取销售人员列表失败')
+      }
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '获取销售人员列表失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   // 重置用户状态
   const resetUser = () => {
     user.value = null
@@ -224,12 +340,17 @@ export const useUserStore = defineStore('user', () => {
 
     // 方法
     fetchCurrentUser,
-    checkIsAdmin, // 导出新添加的方法
+    checkIsAdmin,
     updateUser,
     recharge,
     updatePassword,
     resetUser,
     getUserList,
-    deleteUser
+    deleteUser,
+    // 销售人员管理方法
+    addSalesPerson,
+    deleteSalesPerson,
+    resetPassword,
+    getSalesPersonList
   }
 })

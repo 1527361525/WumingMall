@@ -11,6 +11,7 @@ import DataAnalysis from '@/views/DataAnalysis/index.vue'
 import UserPortrait from '@/views/DataAnalysis/UserPortrait.vue'
 import SalesTrend from '@/views/DataAnalysis/SalesTrend.vue'
 import AbnormalMonitor from '@/views/DataAnalysis/AbnormalMonitor.vue'
+import SalesPerson from '@/views/SalesPerson.vue'
 
 
 const routes = [
@@ -94,6 +95,12 @@ const routes = [
         meta: { requiresAuth: true }
       }
     ]
+  },
+  {
+    path: '/sales-person',
+    name: 'SalesPerson',
+    component: SalesPerson,
+    meta: { requiresAuth: true }
   },
 ]
 

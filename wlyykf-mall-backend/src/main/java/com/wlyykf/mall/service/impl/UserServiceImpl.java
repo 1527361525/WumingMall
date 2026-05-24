@@ -256,4 +256,60 @@ public class UserServiceImpl implements UserService {
         userMapper.updateById(user);
     }
 
+    @Override
+    public ResponseVO<Void> addSalesPerson(String email, String nickName, String password) {
+        // 检查邮箱是否已存在
+        User dbUser = userMapper.selectOne(new QueryWrapper<User>().eq("email", email));
+        if (dbUser != null) {
+            return ResponseVO.fail("该邮箱已存在", null);
+        }
+        // 创建销售人员账号，role=1表示销售人员
+        User user = new User();
+        user.setEmail(email);
+        user.setNickName(nickName);
+        user.setPassword(PasswordUtil.encode(password));
+        user.setRole(1); // 1-销售人员
+        user.setMoney(BigDecimal.ZERO);
+        if (userMapper.insert(user) > 0) {
+            return ResponseVO.success("添加销售人员成功", null);
+        }
+        return ResponseVO.fail("添加销售人员失败", null);
+    }
+
+    @Override
+    public ResponseVO<Void> deleteSalesPerson(Long userId) {
+        // 检查用户是否存在且是销售人员
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return ResponseVO.fail("用户不存在", null);
+        }
+        if (user.getRole() == null || user.getRole() != 1) {
+            return ResponseVO.fail("该用户不是销售人员", null);
+        }
+        if (userMapper.deleteById(userId) > 0) {
+            return ResponseVO.success("删除销售人员成功", null);
+        }
+        return ResponseVO.fail("删除销售人员失败", null);
+    }
+
+    @Override
+    public ResponseVO<Void> resetPassword(Long userId, String newPassword) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return ResponseVO.fail("用户不存在", null);
+        }
+        user.setPassword(PasswordUtil.encode(newPassword));
+        if (userMapper.updateById(user) > 0) {
+            return ResponseVO.success("密码重置成功", null);
+        }
+        return ResponseVO.fail("密码重置失败", null);
+    }
+
+    @Override
+    public PageResultVO<UserVO> getSalesPersonList(Integer pageNum, Integer pageSize) {
+        Page<UserVO> page = Page.of(pageNum, pageSize);
+        Page<UserVO> userVOPage = userMapper.getSalesPersonList(page);
+        return PageResultVO.build(userVOPage);
+    }
+
 }

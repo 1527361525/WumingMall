@@ -110,4 +110,36 @@ public interface UserService {
      * @param ip IP地址
      */
     void updateLastLoginIp(Long userId, String ip);
+
+    /**
+     * 添加销售人员
+     * @param email 邮箱
+     * @param nickName 昵称
+     * @param password 密码
+     * @return 添加结果
+     */
+    ResponseVO<Void> addSalesPerson(String email, String nickName, String password);
+
+    /**
+     * 删除销售人员
+     * @param userId 销售人员ID
+     * @return 删除结果
+     */
+    ResponseVO<Void> deleteSalesPerson(Long userId);
+
+    /**
+     * 重置用户密码
+     * @param userId 用户ID
+     * @param newPassword 新密码
+     * @return 重置结果
+     */
+    ResponseVO<Void> resetPassword(Long userId, String newPassword);
+
+    /**
+     * 查询销售人员列表
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @return 销售人员列表
+     */
+    PageResultVO<UserVO> getSalesPersonList(Integer pageNum, Integer pageSize);
 }
