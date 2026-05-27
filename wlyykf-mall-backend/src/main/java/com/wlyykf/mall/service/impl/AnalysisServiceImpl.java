@@ -123,6 +123,19 @@ public class AnalysisServiceImpl implements AnalysisService {
                     break;
                 case "week":
                     result = analysisMapper.getSalesTrendWeekly();
+                    // 将 yearweek 格式从 yyyyww 转换为 yyyy年ww周
+                    for (Map<String, Object> item : result) {
+                        Object yearweek = item.get("yearweek");
+                        if (yearweek != null) {
+                            String yw = String.valueOf(yearweek);
+                            if (yw.length() == 6) {
+                                String year = yw.substring(0, 4);
+                                String week = yw.substring(4);
+                                item.put("yearweek", year + "年" + week);
+                                item.put("week", year + "年" + week);
+                            }
+                        }
+                    }
                     break;
                 case "month":
                     result = analysisMapper.getSalesTrendMonthly();

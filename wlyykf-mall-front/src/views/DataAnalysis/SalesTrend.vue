@@ -19,7 +19,7 @@
 
     <!-- 销售指标卡片 -->
     <el-row :gutter="20" class="metrics-row">
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="metric-card">
           <div class="metric-label">销售额</div>
           <div class="metric-value">¥{{ formatNumber(salesMetrics.totalAmount) }}</div>
@@ -29,7 +29,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="metric-card">
           <div class="metric-label">订单数</div>
           <div class="metric-value">{{ formatNumber(salesMetrics.totalOrders) }}</div>
@@ -39,17 +39,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card class="metric-card">
-          <div class="metric-label">客单价</div>
-          <div class="metric-value">¥{{ formatNumber(salesMetrics.avgOrderValue) }}</div>
-          <div class="metric-trend" :class="salesMetrics.avgTrend >= 0 ? 'up' : 'down'">
-            <el-icon><ArrowUp v-if="salesMetrics.avgTrend >= 0" /><ArrowDown v-else /></el-icon>
-            {{ Math.abs(salesMetrics.avgTrend) }}%
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card class="metric-card">
           <div class="metric-label">商品销量</div>
           <div class="metric-value">{{ formatNumber(salesMetrics.totalQuantity) }}</div>
@@ -84,8 +74,8 @@
               <span>商品销量TOP10</span>
             </div>
           </template>
-          <div v-if="productTopN.length > 0" ref="productRankChartRef" class="chart-container"></div>
-          <el-empty v-else description="暂无商品销量数据" />
+          <div v-show="productTopN.length > 0" ref="productRankChartRef" class="chart-container"></div>
+          <el-empty v-if="productTopN.length === 0" description="暂无商品销量数据" />
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -124,11 +114,9 @@ const trendType = ref('amount')
 const salesMetrics = reactive({
   totalAmount: 0,
   totalOrders: 0,
-  avgOrderValue: 0,
   totalQuantity: 0,
   amountTrend: 0,
   orderTrend: 0,
-  avgTrend: 0,
   quantityTrend: 0
 })
 
@@ -168,7 +156,6 @@ const calculateMetrics = (data) => {
     salesMetrics.totalAmount = 0
     salesMetrics.totalOrders = 0
     salesMetrics.totalQuantity = 0
-    salesMetrics.avgOrderValue = 0
     return
   }
 
@@ -186,7 +173,6 @@ const calculateMetrics = (data) => {
   salesMetrics.totalAmount = totalAmount
   salesMetrics.totalOrders = totalOrders
   salesMetrics.totalQuantity = totalQuantity
-  salesMetrics.avgOrderValue = totalOrders > 0 ? (totalAmount / totalOrders).toFixed(2) : 0
 
   // 计算环比趋势（最后一个周期 vs 倒数第二个周期）
   if (data.length >= 2) {
@@ -209,12 +195,6 @@ const calculateMetrics = (data) => {
     const previousQuantity = parseInt(previous.sales_quantity || 0)
     salesMetrics.quantityTrend = previousQuantity > 0 
       ? ((currentQuantity - previousQuantity) / previousQuantity * 100).toFixed(1) 
-      : 0
-
-    const currentAvg = currentOrders > 0 ? currentAmount / currentOrders : 0
-    const previousAvg = previousOrders > 0 ? previousAmount / previousOrders : 0
-    salesMetrics.avgTrend = previousAvg > 0 
-      ? ((currentAvg - previousAvg) / previousAvg * 100).toFixed(1) 
       : 0
   }
 }
@@ -239,17 +219,25 @@ const fetchProductTopN = async () => {
     // 根据当前时间维度转换type参数：day->1, week->2, month->3
     const typeMap = { day: 1, week: 2, month: 3 }
     const type = typeMap[timeRange.value] || 1
-    
+
     const response = await axios.get('/statistic/getProductTopN', {
       params: { type, n: 10 },
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
-    
+
     if (response.data.code === 200) {
       productTopN.value = response.data.data || []
-      updateProductRankChart()
+      // 等待DOM更新后再更新图表
+      nextTick(() => {
+        if (!productRankChart && productRankChartRef.value) {
+          initProductRankChart()
+        } else {
+          updateProductRankChart()
+        }
+        productRankChart?.resize()
+      })
     }
   } catch (error) {
     ElMessage.error('获取商品销量排行失败')
@@ -365,7 +353,8 @@ const updateProductRankChart = () => {
     },
     xAxis: {
       type: 'value',
-      name: '销量'
+      name: '销量',
+      minInterval: 1
     },
     yAxis: {
       type: 'category',
@@ -483,9 +472,17 @@ onMounted(() => {
 })
 
 // 监听数据变化，更新图表
-watch(() => analysisStore.categorySales, () => {
-  updateCategoryChart()
-}, { deep: true })
+watch(() => analysisStore.categorySales, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    nextTick(() => {
+      if (!categoryChart && categoryChartRef.value) {
+        initCategoryChart()
+      } else {
+        updateCategoryChart()
+      }
+    })
+  }
+}, { deep: true, immediate: true })
 </script>
 
 <style lang="scss" scoped>

@@ -111,25 +111,6 @@
               />
             </div>
           </el-col>
-          <el-col :span="8">
-            <div class="metric-box">
-              <div class="metric-title">平均客单价</div>
-              <div class="metric-value" :class="getStatusClass(realtimeData.avgStatus)">
-                ¥{{ realtimeData.todayAvg }}
-              </div>
-              <div class="metric-compare">
-                较昨日: 
-                <span :class="realtimeData.avgCompare > 0 ? 'up' : 'down'">
-                  {{ realtimeData.avgCompare > 0 ? '+' : '' }}{{ realtimeData.avgCompare }}%
-                </span>
-              </div>
-              <el-progress 
-                :percentage="realtimeData.avgProgress" 
-                :status="realtimeData.avgStatus"
-                :stroke-width="8"
-              />
-            </div>
-          </el-col>
         </el-row>
       </div>
     </el-card>
@@ -210,10 +191,6 @@
           <el-input-number v-model="thresholdForm.orderThreshold" :min="1" :max="100" />
           <span class="unit">%</span>
         </el-form-item>
-        <el-form-item label="客单价波动阈值">
-          <el-input-number v-model="thresholdForm.avgThreshold" :min="1" :max="100" />
-          <span class="unit">%</span>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="thresholdDialogVisible = false">取消</el-button>
@@ -252,11 +229,7 @@ const realtimeData = reactive({
   todayOrders: 0,
   orderCompare: 0,
   orderProgress: 0,
-  orderStatus: 'success',
-  todayAvg: '0.00',
-  avgCompare: 0,
-  avgProgress: 0,
-  avgStatus: 'success'
+  orderStatus: 'success'
 })
 
 // 筛选条件
@@ -276,8 +249,7 @@ const abnormalList = ref([])
 const thresholdDialogVisible = ref(false)
 const thresholdForm = reactive({
   amountThreshold: 30,
-  orderThreshold: 30,
-  avgThreshold: 30
+  orderThreshold: 30
 })
 
 // 获取状态样式
@@ -436,10 +408,6 @@ const fetchRealtimeData = async () => {
       realtimeData.todayAmount = formatAmount(data.salesAmount)
       realtimeData.todayOrders = data.orderCount
 
-      // 计算客单价
-      const avgPrice = data.orderCount > 0 ? data.salesAmount / data.orderCount : 0
-      realtimeData.todayAvg = formatAmount(avgPrice)
-
       // 获取对比数据计算变化率
       const abnormalRes = await axios.get('/analysis/abnormal/sales', {
         headers: {
@@ -455,28 +423,14 @@ const fetchRealtimeData = async () => {
           realtimeData.orderCompare = abnormalData.dayOverDayChange.orderCountChangeRate || 0
         }
 
-        // 计算平均客单价变化
-        const todayAvg = data.orderCount > 0 ? data.salesAmount / data.orderCount : 0
-        const yesterdayOrderCount = abnormalData.yesterday?.orderCount || 0
-        const yesterdaySalesAmount = abnormalData.yesterday?.salesAmount || 0
-        const yesterdayAvg = yesterdayOrderCount > 0 ? yesterdaySalesAmount / yesterdayOrderCount : 0
-
-        if (yesterdayAvg > 0) {
-          realtimeData.avgCompare = ((todayAvg - yesterdayAvg) / yesterdayAvg) * 100
-        } else {
-          realtimeData.avgCompare = 0
-        }
-
         // 更新状态
         const threshold = abnormalData.threshold || 30
         realtimeData.amountStatus = Math.abs(realtimeData.amountCompare) >= threshold ? 'exception' : 'success'
         realtimeData.orderStatus = Math.abs(realtimeData.orderCompare) >= threshold ? 'warning' : 'success'
-        realtimeData.avgStatus = Math.abs(realtimeData.avgCompare) >= threshold ? 'warning' : 'success'
 
         // 更新进度条
         realtimeData.amountProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.amountCompare)))
         realtimeData.orderProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.orderCompare)))
-        realtimeData.avgProgress = Math.min(100, Math.max(0, 100 - Math.abs(realtimeData.avgCompare)))
       }
 
       ElMessage.success('实时数据已刷新')

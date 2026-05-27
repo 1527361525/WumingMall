@@ -87,7 +87,7 @@
         JOIN tb_product p ON oi2.product_id = p.product_id
         JOIN tb_order o ON oi2.order_id = o.order_id
         WHERE oi1.product_id = #{productId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi1.del_flag = 0
           AND oi2.del_flag = 0
@@ -108,8 +108,8 @@
         JOIN tb_order o2 ON oi2.order_id = o2.order_id
         WHERE o1.user_id = #{userId}
           AND o2.user_id != #{userId}
-          AND o1.order_status = 1
-          AND o2.order_status = 1
+          AND o1.order_status = 3
+          AND o2.order_status = 3
           AND o1.del_flag = 0
           AND o2.del_flag = 0
           AND oi1.del_flag = 0
@@ -125,7 +125,7 @@
         FROM tb_order_item oi
         JOIN tb_order o ON oi.order_id = o.order_id
         WHERE o.user_id = #{userId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
     </select>
@@ -145,7 +145,7 @@
         <foreach collection="similarUserIds" item="userId" open="(" separator="," close=")">
             #{userId}
         </foreach>
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND p.del_flag = 0
@@ -154,7 +154,7 @@
               FROM tb_order_item oi2
               JOIN tb_order o2 ON oi2.order_id = o2.order_id
               WHERE o2.user_id = #{userId}
-                AND o2.order_status = 1
+                AND o2.order_status = 3
                 AND o2.del_flag = 0
                 AND oi2.del_flag = 0
           )
@@ -174,7 +174,7 @@
         FROM tb_order_item oi
         JOIN tb_order o ON oi.order_id = o.order_id
         JOIN tb_product p ON oi.product_id = p.product_id
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND p.del_flag = 0

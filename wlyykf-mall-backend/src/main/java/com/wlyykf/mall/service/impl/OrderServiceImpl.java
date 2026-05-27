@@ -253,7 +253,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             log.info("发送发货邮件给用户：{}", orderOwner.getEmail());
-            emailService.sendDeliveryEmail(orderOwner.getEmail(), order.getOrderNo());
+//            emailService.sendDeliveryEmail(orderOwner.getEmail(), order.getOrderNo());
 
             return ResponseVO.success("发货成功", null);
         }

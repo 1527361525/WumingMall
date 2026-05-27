@@ -26,7 +26,7 @@
         FROM (
             SELECT user_id, SUM(total_amount) AS total_amount
             FROM tb_order
-            WHERE order_status = 1
+            WHERE order_status = 3
               AND del_flag = 0
             GROUP BY user_id
         ) t
@@ -44,7 +44,7 @@
         JOIN tb_category c ON p.category_id = c.category_id
         JOIN tb_order o ON oi.order_id = o.order_id
         WHERE o.user_id = #{userId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND p.del_flag = 0
@@ -62,7 +62,7 @@
             SUM(oi.quantity) AS sales_quantity
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
@@ -74,14 +74,14 @@
     <!-- 获取销售趋势统计（周趋势-最近5周） -->
     <select id="getSalesTrendWeekly" resultType="java.util.HashMap">
         SELECT
-            CONCAT(YEARWEEK(o.payment_time), '周') AS week,
+            YEARWEEK(o.payment_time) AS week,
             YEARWEEK(o.payment_time) AS yearweek,
             COUNT(DISTINCT o.order_id) AS order_count,
             SUM(o.total_amount) AS sales_amount,
             SUM(oi.quantity) AS sales_quantity
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
@@ -99,7 +99,7 @@
             SUM(oi.quantity) AS sales_quantity
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
@@ -118,7 +118,7 @@
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
         WHERE oi.product_id = #{productId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
@@ -138,7 +138,7 @@
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
         WHERE oi.product_id = #{productId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
@@ -157,7 +157,7 @@
         FROM tb_order o
         JOIN tb_order_item oi ON o.order_id = oi.order_id
         WHERE oi.product_id = #{productId}
-          AND o.order_status = 1
+          AND o.order_status = 3
           AND o.del_flag = 0
           AND oi.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
@@ -177,7 +177,7 @@
         FROM tb_category c
         LEFT JOIN tb_product p ON c.category_id = p.category_id AND p.del_flag = 0
         LEFT JOIN tb_order_item oi ON p.product_id = oi.product_id AND oi.del_flag = 0
-        LEFT JOIN tb_order o ON oi.order_id = o.order_id AND o.order_status = 1 AND o.del_flag = 0
+        LEFT JOIN tb_order o ON oi.order_id = o.order_id AND o.order_status = 3 AND o.del_flag = 0
         WHERE c.del_flag = 0
         GROUP BY c.category_id, c.name
         ORDER BY sales_amount DESC
@@ -189,7 +189,7 @@
             COUNT(DISTINCT o.order_id) AS order_count,
             COALESCE(SUM(o.total_amount), 0) AS sales_amount
         FROM tb_order o
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND o.payment_time &gt;= CURDATE()
           AND o.payment_time &lt; NOW()
@@ -201,7 +201,7 @@
             COUNT(DISTINCT o.order_id) AS order_count,
             COALESCE(SUM(o.total_amount), 0) AS sales_amount
         FROM tb_order o
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
           AND o.payment_time &lt; DATE_SUB(NOW(), INTERVAL 1 DAY)
@@ -213,7 +213,7 @@
             COUNT(DISTINCT o.order_id) AS order_count,
             COALESCE(SUM(o.total_amount), 0) AS sales_amount
         FROM tb_order o
-        WHERE o.order_status = 1
+        WHERE o.order_status = 3
           AND o.del_flag = 0
           AND o.payment_time &gt;= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
           AND o.payment_time &lt; DATE_SUB(CURDATE(), INTERVAL 6 DAY)
