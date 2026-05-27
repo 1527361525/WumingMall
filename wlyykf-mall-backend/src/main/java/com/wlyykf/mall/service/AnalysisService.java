@@ -62,4 +62,10 @@ public interface AnalysisService {
      * @return 今日实时累计订单数和销售额
      */
     ResponseVO<Map<String, Object>> getTodayRealtimeData();
+
+    /**
+     * 获取用户画像概览统计数据
+     * @return 包含总用户数、有购买记录用户数、人均消费金额的数据
+     */
+    ResponseVO<Map<String, Object>> getUserPortraitOverview();
 }

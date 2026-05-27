@@ -2,16 +2,6 @@
   <div class="recommend-bar">
     <div class="recommend-header">
       <h3 class="recommend-title">商品推荐</h3>
-      <el-button 
-        type="primary" 
-        size="small" 
-        :loading="loading" 
-        @click="refreshRecommendations"
-        class="refresh-btn"
-      >
-        <el-icon><Refresh /></el-icon>
-        换一批
-      </el-button>
     </div>
     
     <div v-if="loading && recommendations.length === 0" class="recommend-loading">
@@ -51,7 +41,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRecommendStore } from '@/stores/recommend.store'
 import { useUserStore } from '@/stores/user.store'
-import { Refresh } from '@element-plus/icons-vue'
+
 import { ElMessage } from 'element-plus'
 
 const props = defineProps({
@@ -88,11 +78,6 @@ const loadRecommendations = async () => {
     console.error('获取推荐商品失败:', error)
     ElMessage.error('获取推荐商品失败')
   }
-}
-
-// 刷新推荐
-const refreshRecommendations = () => {
-  loadRecommendations()
 }
 
 // 处理商品点击
@@ -158,11 +143,6 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
-}
-
-.refresh-btn {
-  padding: 4px 8px;
-  font-size: 12px;
 }
 
 .recommend-loading {

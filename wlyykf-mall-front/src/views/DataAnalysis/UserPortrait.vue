@@ -3,9 +3,9 @@
     <h2 class="page-title">用户画像分析</h2>
     
     <!-- 数据概览卡片 -->
-    <el-row :gutter="20" class="overview-cards">
+    <el-row :gutter="20" class="overview-cards" v-loading="overviewLoading">
       <el-col :span="8">
-        <el-card class="overview-card">
+        <el-card class="overview-card" @click="fetchOverviewData" style="cursor: pointer;">
           <div class="card-icon" style="background-color: #409eff;">
             <el-icon><User /></el-icon>
           </div>
@@ -16,7 +16,7 @@
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card class="overview-card">
+        <el-card class="overview-card" @click="fetchOverviewData" style="cursor: pointer;">
           <div class="card-icon" style="background-color: #67c23a;">
             <el-icon><ShoppingCart /></el-icon>
           </div>
@@ -27,7 +27,7 @@
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card class="overview-card">
+        <el-card class="overview-card" @click="fetchOverviewData" style="cursor: pointer;">
           <div class="card-icon" style="background-color: #e6a23c;">
             <el-icon><Money /></el-icon>
           </div>
@@ -114,12 +114,15 @@ import { useAnalysisStore } from '@/stores/analysis.store'
 
 const analysisStore = useAnalysisStore()
 
-// 数据概览（暂用模拟数据，后续可接入统计接口）
+// 数据概览
 const overviewData = reactive({
   totalUsers: '-',
   purchaseUsers: '-',
   avgConsumption: '-'
 })
+
+// 概览数据加载状态
+const overviewLoading = ref(false)
 
 // 查询表单
 const queryForm = reactive({
@@ -174,7 +177,8 @@ const initRegionChart = (data) => {
     },
     yAxis: {
       type: 'value',
-      name: '用户数'
+      name: '用户数',
+      minInterval: 1
     },
     series: [{
       data: counts,
@@ -280,7 +284,9 @@ const initPreferenceChart = (data) => {
     },
     yAxis: {
       type: 'value',
-      name: '购买次数'
+      name: '购买次数',
+      minInterval: 1,
+      interval: 1
     },
     series: [{
       data: counts,
@@ -351,8 +357,25 @@ const queryUserPreference = async () => {
   }
 }
 
+// 获取概览数据
+const fetchOverviewData = async () => {
+  overviewLoading.value = true
+  try {
+    await analysisStore.fetchUserOverview()
+    const data = analysisStore.userOverview
+    overviewData.totalUsers = data.totalUsers || 0
+    overviewData.purchaseUsers = data.purchaseUsers || 0
+    overviewData.avgConsumption = (data.avgConsumption || 0).toFixed(2)
+  } catch (error) {
+    ElMessage.error('获取用户概览数据失败')
+  } finally {
+    overviewLoading.value = false
+  }
+}
+
 onMounted(() => {
   // 初始加载数据
+  fetchOverviewData()
   refreshRegionData()
   refreshPowerData()
   

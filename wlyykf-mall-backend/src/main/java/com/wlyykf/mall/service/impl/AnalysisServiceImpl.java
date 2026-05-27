@@ -374,6 +374,27 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
     }
 
+    @Override
+    public ResponseVO<Map<String, Object>> getUserPortraitOverview() {
+        try {
+            // 获取统计数据
+            Long totalUsers = analysisMapper.getTotalUserCount();
+            Long purchaseUsers = analysisMapper.getPurchaseUserCount();
+            BigDecimal avgConsumption = analysisMapper.getAverageConsumption();
+
+            // 构建结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalUsers", totalUsers != null ? totalUsers : 0L);
+            result.put("purchaseUsers", purchaseUsers != null ? purchaseUsers : 0L);
+            result.put("avgConsumption", avgConsumption != null ? avgConsumption.doubleValue() : 0.0);
+
+            return ResponseVO.success(result);
+        } catch (Exception e) {
+            log.error("获取用户画像概览数据失败", e);
+            return ResponseVO.fail("获取用户画像概览数据失败", null);
+        }
+    }
+
     /**
      * 计算变化率（百分比）
      * @param current 当前值

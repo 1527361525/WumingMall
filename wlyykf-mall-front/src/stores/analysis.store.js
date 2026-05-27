@@ -11,6 +11,11 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const salesTrend = ref([])
   const productTrend = ref([])
   const categorySales = ref([])
+  const userOverview = ref({
+    totalUsers: 0,
+    purchaseUsers: 0,
+    avgConsumption: 0
+  })
   const loading = ref(false)
   const error = ref(null)
 
@@ -178,6 +183,37 @@ export const useAnalysisStore = defineStore('analysis', () => {
     }
   }
 
+  // 获取用户画像概览统计
+  const fetchUserOverview = async () => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.get('/analysis/user/overview', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.data.code === 200) {
+        userOverview.value = response.data.data || {
+          totalUsers: 0,
+          purchaseUsers: 0,
+          avgConsumption: 0
+        }
+      } else {
+        throw new Error(response.data.info || '获取用户概览数据失败')
+      }
+      
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.info || err.message || '获取用户概览数据失败'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // 状态
     regionDistribution,
@@ -186,6 +222,7 @@ export const useAnalysisStore = defineStore('analysis', () => {
     salesTrend,
     productTrend,
     categorySales,
+    userOverview,
     loading,
     error,
     
@@ -195,6 +232,7 @@ export const useAnalysisStore = defineStore('analysis', () => {
     fetchUserPreference,
     fetchSalesTrend,
     fetchProductTrend,
-    fetchCategorySales
+    fetchCategorySales,
+    fetchUserOverview
   }
 })

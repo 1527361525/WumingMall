@@ -219,4 +219,31 @@
           AND o.payment_time &lt; DATE_SUB(CURDATE(), INTERVAL 6 DAY)
     </select>
 
+    <!-- 获取总用户数 -->
+    <select id="getTotalUserCount" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM tb_user
+        WHERE del_flag = 0
+    </select>
+
+    <!-- 获取有购买记录的用户数 -->
+    <select id="getPurchaseUserCount" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM tb_order
+        WHERE order_status = 3
+          AND del_flag = 0
+    </select>
+
+    <!-- 获取人均消费金额 -->
+    <select id="getAverageConsumption" resultType="java.math.BigDecimal">
+        SELECT COALESCE(AVG(user_total), 0)
+        FROM (
+            SELECT SUM(total_amount) AS user_total
+            FROM tb_order
+            WHERE order_status = 3
+              AND del_flag = 0
+            GROUP BY user_id
+        ) t
+    </select>
+
 </mapper>

@@ -120,4 +120,14 @@ public class AnalysisController {
     public ResponseVO<Map<String, Object>> getTodayRealtimeData() {
         return analysisService.getTodayRealtimeData();
     }
+
+    /**
+     * 用户画像概览统计
+     * 获取总用户数、有购买记录用户数、人均消费金额
+     * @return 用户画像概览统计数据
+     */
+    @GetMapping("/user/overview")
+    public ResponseVO<Map<String, Object>> getUserPortraitOverview() {
+        return analysisService.getUserPortraitOverview();
+    }
 }

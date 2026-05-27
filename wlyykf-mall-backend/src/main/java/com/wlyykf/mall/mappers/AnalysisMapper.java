@@ -92,4 +92,22 @@ public interface AnalysisMapper {
      * @return 上周同日订单数和销售额
      */
     Map<String, Object> getLastWeekSameDaySales();
+
+    /**
+     * 获取总用户数
+     * @return 总用户数量
+     */
+    Long getTotalUserCount();
+
+    /**
+     * 获取有购买记录的用户数
+     * @return 有购买记录的用户数量
+     */
+    Long getPurchaseUserCount();
+
+    /**
+     * 获取人均消费金额
+     * @return 人均消费金额
+     */
+    java.math.BigDecimal getAverageConsumption();
 }
