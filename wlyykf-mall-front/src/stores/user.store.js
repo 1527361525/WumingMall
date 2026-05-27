@@ -17,15 +17,17 @@ export const useUserStore = defineStore('user', () => {
 
   // 获取当前用户信息
   const fetchCurrentUser = async () => {
+    const token = localStorage.getItem('token')
+    // 无token时跳过请求
+    if (!token || token === 'null' || token === 'undefined') {
+      return null
+    }
+    
     try {
       loading.value = true
       error.value = null
 
-      const response = await axios.get('/user/getCurrentUser', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.get('/user/getCurrentUser')
 
       if (response.data.code === 200) {
         user.value = response.data.data
@@ -44,15 +46,18 @@ export const useUserStore = defineStore('user', () => {
 
   // 检查是否为管理员（新添加的方法）
   const checkIsAdmin = async () => {
+    const token = localStorage.getItem('token')
+    // 无token时跳过请求
+    if (!token || token === 'null' || token === 'undefined') {
+      isAdminFlag.value = false
+      return null
+    }
+    
     try {
       loading.value = true
       error.value = null
 
-      const response = await axios.get('/user/isAdmin', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.get('/user/isAdmin')
 
       if (response.data.code === 200) {
         isAdminFlag.value = response.data.data.isAdmin

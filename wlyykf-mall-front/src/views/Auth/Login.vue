@@ -34,6 +34,7 @@
       
       <div class="auth-footer">
         <span @click="$router.push('/register')">没有账号？立即注册</span>
+        <span @click="$router.push('/')">仅浏览，暂不登录</span>
       </div>
     </div>
   </div>

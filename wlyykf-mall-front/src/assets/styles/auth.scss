@@ -40,11 +40,22 @@
     margin-top: 20px;
     text-align: center;
     color: #666;
-    cursor: pointer;
-    
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    span {
+      cursor: pointer;
+    }
+
     span:hover {
       color: #409eff;
       text-decoration: underline;
+    }
+
+    span:last-child {
+      font-size: 14px;
+      color: #999;
     }
   }
 

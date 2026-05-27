@@ -14,12 +14,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       loading.value = true
 
-      const response = await axios.post('/product/getProductList', params, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const response = await axios.post('/product/getProductList', params)
       products.value = response.data.data
       total.value = response.data.total
       return response.data
@@ -36,11 +31,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       loading.value = true
 
-      const response = await axios.get(`/product/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.get(`/product/${productId}`)
       currentProduct.value = response.data.data
       return response.data.data
     } catch (err) {
@@ -55,11 +46,7 @@ export const useProductStore = defineStore('product', () => {
   const addProduct = async (productData) => {
     try {
       loading.value = true
-      const response = await axios.post('/product', productData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.post('/product', productData)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.info || '添加商品失败'
@@ -73,11 +60,7 @@ export const useProductStore = defineStore('product', () => {
   const updateProduct = async (productData) => {
     try {
       loading.value = true
-      const response = await axios.put('/product', productData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.put('/product', productData)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.info || '更新商品失败'
@@ -91,11 +74,7 @@ export const useProductStore = defineStore('product', () => {
   const deleteProduct = async (productId) => {
     try {
       loading.value = true
-      const response = await axios.put(`/product/${productId}`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.put(`/product/${productId}`, {})
       return response.data
     } catch (err) {
       error.value = err.response?.data?.info || '删除商品失败'
@@ -110,11 +89,7 @@ export const useProductStore = defineStore('product', () => {
 const fetchProductForUpdate = async (productId) => {
   try {
     loading.value = true
-    const response = await axios.get(`/product/getForUpdate/${productId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    })
+    const response = await axios.get(`/product/getForUpdate/${productId}`)
     return response.data.data
   } catch (err) {
     error.value = err.response?.data?.info || '获取商品信息失败'

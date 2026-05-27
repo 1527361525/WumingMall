@@ -35,12 +35,21 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         String header = request.getHeader("Authorization");
+        
+        // 无token或格式错误，返回401（需要登录的接口已进入此拦截器）
         if (StringUtils.isEmpty(header) || !header.startsWith("Bearer ")) {
-            throw new BusinessException(401, "Token错误");
+            throw new BusinessException(401, "请先登录");
         }
 
         // 提取token
         String token = header.substring(7);
+        
+        // token为空、null字符串、undefined，返回401
+        if (!StringUtils.hasText(token) || 
+            "null".equals(token) || 
+            "undefined".equals(token)) {
+            throw new BusinessException(401, "请先登录");
+        }
 
         // 查看Redis中是否有该token
         TokenUserInfoDTO tokenUserInfoDTO = redisComponent.getTokenInfo(token);

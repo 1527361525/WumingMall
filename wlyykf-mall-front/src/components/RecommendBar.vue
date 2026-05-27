@@ -21,7 +21,7 @@
       >
         <div class="recommend-image-wrapper">
           <img 
-            :src="item.productImage || '/default-product.png'" 
+            :src="item.productImage || defaultProductImage" 
             :alt="item.name"
             class="recommend-image"
             @error="handleImageError"
@@ -41,6 +41,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRecommendStore } from '@/stores/recommend.store'
 import { useUserStore } from '@/stores/user.store'
+import defaultProductImage from '@/assets/images/default-product.jpg'
 
 import { ElMessage } from 'element-plus'
 
@@ -87,7 +88,7 @@ const handleItemClick = (item) => {
 
 // 处理图片加载失败
 const handleImageError = (e) => {
-  e.target.src = '/default-product.png'
+  e.target.src = defaultProductImage
 }
 
 // 格式化价格

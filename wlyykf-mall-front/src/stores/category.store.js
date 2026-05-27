@@ -7,7 +7,7 @@ export const useCategoryStore = defineStore('category', () => {
   const loading = ref(false)
   const error = ref(null)
   
-  // 获取分类
+  // 获取分类（无需登录）
   const fetchCategories = async (parentId = 0) => {
     try {
       loading.value = true
@@ -15,10 +15,8 @@ export const useCategoryStore = defineStore('category', () => {
       const stringParentId = String(parentId)
       
       const response = await axios.get('/category/getChildren', {
-        params: { parentId: stringParentId },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        params: { parentId: stringParentId }
+        // 移除强制 Authorization header，让后端允许匿名访问
       })
       categories.value = response.data.data
       return response.data.data

@@ -55,22 +55,17 @@ const productListRef = ref(null)
 
 // 初始化
 onMounted(async () => {
-  // 检查用户是否已登录
-  if (!authStore.token) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    return
-  }
-
   try {
-    // 检查是否为管理员并更新用户状态
-    await authStore.checkIsAdmin()
+    // 如果已登录，检查是否为管理员
+    if (authStore.token) {
+      await authStore.checkIsAdmin()
+    }
     
-    // 加载分类
+    // 加载分类（无需登录）
     categories.value = await categoryStore.fetchCategories()
   } catch (error) {
-    ElMessage.error('用户未登录')
-    router.push('/login')
+    console.error('加载失败:', error)
+    ElMessage.error('加载失败')
   }
 })
 

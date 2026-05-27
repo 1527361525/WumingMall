@@ -24,6 +24,7 @@
           </div>
           <nav class="user-nav">
             <template v-if="!authStore.token">
+              <span class="login-link" @click="goToLogin">去登录</span>
             </template>
             <template v-else>
               <el-dropdown>
@@ -101,9 +102,24 @@ const isAdmin = computed(() => {
   return userStore.isAdmin // 使用userStore中定义的isAdmin计算属性
 })
 
-// 监听路由变化显示加载状态
-router.beforeEach(() => {
+// 路由守卫：检查登录状态
+router.beforeEach((to, from, next) => {
   isLoading.value = true
+  
+  // 需要登录但未登录，跳转到登录页
+  if (to.meta.requiresAuth && !authStore.token) {
+    ElMessage.warning('请先登录')
+    next('/login')
+    return
+  }
+  
+  // 游客专属页面（登录/注册），已登录用户自动跳转到首页
+  if (to.meta.guestOnly && authStore.token) {
+    next('/')
+    return
+  }
+  
+  next()
 })
 
 router.afterEach(() => {
@@ -125,6 +141,11 @@ const handleLogout = async () => {
 // 前往个人中心
 const goToProfile = () => {
   router.push('/profile')
+}
+
+// 前往登录页
+const goToLogin = () => {
+  router.push('/login')
 }
 
 // 获取用户信息的函数
@@ -212,5 +233,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+}
+
+.login-link {
+  color: #409eff;
+  cursor: pointer;
+  font-size: 14px;
+  
+  &:hover {
+    color: #66b1ff;
+  }
 }
 </style>
