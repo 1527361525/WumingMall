@@ -12,6 +12,7 @@ import UserPortrait from '@/views/DataAnalysis/UserPortrait.vue'
 import SalesTrend from '@/views/DataAnalysis/SalesTrend.vue'
 import AbnormalMonitor from '@/views/DataAnalysis/AbnormalMonitor.vue'
 import SalesPerson from '@/views/SalesPerson.vue'
+import OperationLog from '@/views/OperationLog.vue'
 
 
 const routes = [
@@ -100,6 +101,12 @@ const routes = [
     path: '/sales-person',
     name: 'SalesPerson',
     component: SalesPerson,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/operation-log',
+    name: 'OperationLog',
+    component: OperationLog,
     meta: { requiresAuth: true }
   },
 ]

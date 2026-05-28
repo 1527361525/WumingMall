@@ -280,8 +280,8 @@ const fetchAbnormalDetection = async () => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
-    const { status, data } = response.data
-    if (status === 0 && data) {
+    const { code, data } = response.data
+    if (code === 200 && data) {
       // 更新概览统计
       let warningCount = 0
       let errorCount = 0
@@ -402,8 +402,8 @@ const fetchRealtimeData = async () => {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     })
-    const { status, data } = response.data
-    if (status === 0 && data) {
+    const { code, data } = response.data
+    if (code === 200 && data) {
       // 更新实时数据
       realtimeData.todayAmount = formatAmount(data.salesAmount)
       realtimeData.todayOrders = data.orderCount
@@ -414,7 +414,7 @@ const fetchRealtimeData = async () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
-      if (abnormalRes.data.status === 0 && abnormalRes.data.data) {
+      if (abnormalRes.data.code === 200 && abnormalRes.data.data) {
         const abnormalData = abnormalRes.data.data
 
         // 更新环比数据

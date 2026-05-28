@@ -19,6 +19,7 @@
                 <router-link to="/data-analysis" class="nav-item">数据分析</router-link>
                 <router-link to="/user" class="nav-item">用户管理</router-link>
                 <router-link to="/sales-person" class="nav-item">销售人员管理</router-link>
+                <router-link to="/operation-log" class="nav-item">操作日志</router-link>
               </template>
             </nav>
           </div>

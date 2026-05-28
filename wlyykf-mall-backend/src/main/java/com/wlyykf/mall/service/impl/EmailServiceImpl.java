@@ -37,7 +37,7 @@ public class EmailServiceImpl implements EmailService {
 
         log.info("向邮箱 " + email + " 发送验证码：" + code);
 
-        sendSimpleMail(email, "无名商城验证码", "您的验证码是：" + code);
+//        sendSimpleMail(email, "无名商城验证码", "您的验证码是：" + code);
     }
 
     @Override

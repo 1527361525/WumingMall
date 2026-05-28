@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                     "/user/login", 
                     "/user/register", 
-                    "/user/sendEmailCode",
+                    "/user/sendCode",
                     "/product/getProductList", 
                     "/category/getChildren"
                 );

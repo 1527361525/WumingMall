@@ -97,7 +97,7 @@ public class RecommendServiceImpl implements RecommendService {
             int needMore = RECOMMEND_LIMIT - recommendations.size();
             log.info("推荐数量不足，需要补充 {} 个热门商品", needMore);
 
-            List<Long> existingProductIds = recommendations.stream()
+            List<String> existingProductIds = recommendations.stream()
                     .map(RecommendProductVO::getProductId)
                     .collect(Collectors.toList());
 
@@ -107,9 +107,9 @@ public class RecommendServiceImpl implements RecommendService {
                 if (recommendations.size() >= RECOMMEND_LIMIT) {
                     break;
                 }
-                // 避免重复推荐
+                // 避免重复推荐（将 Long 转为 String 进行比较）
                 if (!existingProductIds.contains(hotProduct.getProductId())
-                        && !userPurchasedProducts.contains(hotProduct.getProductId())) {
+                        && !userPurchasedProducts.contains(Long.valueOf(hotProduct.getProductId()))) {
                     recommendations.add(hotProduct);
                 }
             }

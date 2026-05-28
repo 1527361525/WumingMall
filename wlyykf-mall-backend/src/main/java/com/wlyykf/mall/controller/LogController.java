@@ -1,9 +1,12 @@
 package com.wlyykf.mall.controller;
 
+import com.wlyykf.mall.dto.OperationLogQueryDTO;
 import com.wlyykf.mall.dto.TokenUserInfoDTO;
 import com.wlyykf.mall.dto.UserBrowseLogDTO;
 import com.wlyykf.mall.service.LogService;
 import com.wlyykf.mall.utils.CurrentUserUtil;
+import com.wlyykf.mall.vo.OperationLogVO;
+import com.wlyykf.mall.vo.PageResultVO;
 import com.wlyykf.mall.vo.ResponseVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +65,34 @@ public class LogController {
         } catch (Exception e) {
             log.error("记录浏览日志失败", e);
             return ResponseVO.fail("记录浏览日志失败", null);
+        }
+    }
+
+    /**
+     * 分页查询操作日志列表（仅管理者可操作）
+     *
+     * @param queryDTO 查询条件
+     * @return 操作日志分页列表
+     */
+    @PostMapping("/operation/list")
+    public PageResultVO<OperationLogVO> getOperationLogList(@Valid @RequestBody OperationLogQueryDTO queryDTO) {
+        // 校验当前用户是否为管理者
+        TokenUserInfoDTO currentUser = currentUserUtil.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() != 2) {
+            PageResultVO<OperationLogVO> result = new PageResultVO<>();
+            result.setCode(403);
+            result.setInfo("仅管理者可操作");
+            return result;
+        }
+
+        try {
+            return logService.getOperationLogList(queryDTO);
+        } catch (Exception e) {
+            log.error("查询操作日志列表失败", e);
+            PageResultVO<OperationLogVO> result = new PageResultVO<>();
+            result.setCode(500);
+            result.setInfo("查询操作日志列表失败");
+            return result;
         }
     }
 

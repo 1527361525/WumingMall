@@ -1,5 +1,9 @@
 package com.wlyykf.mall.service;
 
+import com.wlyykf.mall.dto.OperationLogQueryDTO;
+import com.wlyykf.mall.vo.OperationLogVO;
+import com.wlyykf.mall.vo.PageResultVO;
+
 /**
  * 日志服务接口
  */
@@ -44,4 +48,12 @@ public interface LogService {
      * @param ip           IP地址
      */
     void recordBrowseLog(Long userId, Long productId, Long categoryId, Integer stayDuration, String ip);
+
+    /**
+     * 分页查询操作日志列表
+     *
+     * @param queryDTO 查询条件
+     * @return 分页结果
+     */
+    PageResultVO<OperationLogVO> getOperationLogList(OperationLogQueryDTO queryDTO);
 }

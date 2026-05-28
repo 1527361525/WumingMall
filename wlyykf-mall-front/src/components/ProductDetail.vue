@@ -47,7 +47,7 @@
               v-for="item in recommendList" 
               :key="item.productId"
               class="recommend-item"
-              @click="goToProduct(item.productId)"
+              @click.stop="goToProduct(item.productId)"
             >
               <div class="recommend-image">
                 <img :src="getImageUrl(item.productImage)" alt="推荐商品">
@@ -210,9 +210,7 @@ const fetchRecommendList = async (productId) => {
 
 // 跳转到推荐商品
 const goToProduct = (productId) => {
-  // 先关闭当前弹窗
-  close()
-  // 触发事件让父组件重新打开新商品的详情
+  // 直接切换商品，不关闭弹窗，让父组件更新productId
   emit('changeProduct', productId)
 }
 
