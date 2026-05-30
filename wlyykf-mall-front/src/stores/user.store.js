@@ -7,12 +7,25 @@ export const useUserStore = defineStore('user', () => {
   const user = ref(null)
   const loading = ref(false)
   const error = ref(null)
-  // 添加一个存储管理员状态的ref
+  // 存储权限状态的ref
   const isAdminFlag = ref(false)
+  const isSalesPersonFlag = ref(false)
+  const canAccessDataAnalysisFlag = ref(false)
+  const userRole = ref(null)
 
   // 计算属性：是否为管理员
   const isAdmin = computed(() => {
-    return isAdminFlag.value // 使用专门的管理员标志位
+    return isAdminFlag.value
+  })
+
+  // 计算属性：是否为销售人员
+  const isSalesPerson = computed(() => {
+    return isSalesPersonFlag.value
+  })
+
+  // 计算属性：是否可以访问数据分析
+  const canAccessDataAnalysis = computed(() => {
+    return canAccessDataAnalysisFlag.value
   })
 
   // 获取当前用户信息
@@ -44,15 +57,18 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // 检查是否为管理员（新添加的方法）
+  // 检查权限（修改后的方法，返回更详细的权限信息）
   const checkIsAdmin = async () => {
     const token = localStorage.getItem('token')
     // 无token时跳过请求
     if (!token || token === 'null' || token === 'undefined') {
       isAdminFlag.value = false
+      isSalesPersonFlag.value = false
+      canAccessDataAnalysisFlag.value = false
+      userRole.value = null
       return null
     }
-    
+
     try {
       loading.value = true
       error.value = null
@@ -60,15 +76,21 @@ export const useUserStore = defineStore('user', () => {
       const response = await axios.get('/user/isAdmin')
 
       if (response.data.code === 200) {
-        isAdminFlag.value = response.data.data.isAdmin
+        const data = response.data.data
+        isAdminFlag.value = data.isAdmin || false
+        isSalesPersonFlag.value = data.isSalesPerson || false
+        canAccessDataAnalysisFlag.value = data.canAccessDataAnalysis || false
+        userRole.value = data.role
       } else {
-        throw new Error(response.data.info || '检查管理员权限失败')
+        throw new Error(response.data.info || '检查权限失败')
       }
 
       return response.data
     } catch (err) {
-      error.value = err.response?.data?.info || err.message || '检查管理员权限失败'
+      error.value = err.response?.data?.info || err.message || '检查权限失败'
       isAdminFlag.value = false
+      isSalesPersonFlag.value = false
+      canAccessDataAnalysisFlag.value = false
       throw err
     } finally {
       loading.value = false
@@ -333,7 +355,10 @@ export const useUserStore = defineStore('user', () => {
     user.value = null
     loading.value = false
     error.value = null
-    isAdminFlag.value = false // 重置管理员标志位
+    isAdminFlag.value = false
+    isSalesPersonFlag.value = false
+    canAccessDataAnalysisFlag.value = false
+    userRole.value = null
   }
 
   return {
@@ -342,6 +367,9 @@ export const useUserStore = defineStore('user', () => {
     loading,
     error,
     isAdmin,
+    isSalesPerson,
+    canAccessDataAnalysis,
+    userRole,
 
     // 方法
     fetchCurrentUser,

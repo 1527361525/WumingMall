@@ -13,14 +13,15 @@
               <router-link to="/" class="nav-item">首页</router-link>
               <router-link to="/cart" class="nav-item">购物车</router-link>
               <router-link to="/order" class="nav-item">我的订单</router-link>
-              <!-- 只有管理员才显示订单管理和统计菜单 -->
+              <!-- 管理员专属菜单 -->
               <template v-if="isAdmin">
                 <router-link to="/order-admin" class="nav-item">订单管理</router-link>
-                <router-link to="/data-analysis" class="nav-item">数据分析</router-link>
                 <router-link to="/user" class="nav-item">用户管理</router-link>
                 <router-link to="/sales-person" class="nav-item">销售人员管理</router-link>
                 <router-link to="/operation-log" class="nav-item">操作日志</router-link>
               </template>
+              <!-- 管理员和销售人员都可以访问数据分析 -->
+              <router-link v-if="canAccessDataAnalysis" to="/data-analysis" class="nav-item">数据分析</router-link>
             </nav>
           </div>
           <nav class="user-nav">
@@ -98,9 +99,14 @@ const userNickName = computed(() => {
   return userStore.user?.nickName || '用户'
 })
 
-// 计算属性：是否为管理员（修改为使用userStore中的isAdmin）
+// 计算属性：是否为管理员
 const isAdmin = computed(() => {
-  return userStore.isAdmin // 使用userStore中定义的isAdmin计算属性
+  return userStore.isAdmin
+})
+
+// 计算属性：是否可以访问数据分析（管理员或销售人员）
+const canAccessDataAnalysis = computed(() => {
+  return userStore.canAccessDataAnalysis
 })
 
 // 路由守卫：检查登录状态

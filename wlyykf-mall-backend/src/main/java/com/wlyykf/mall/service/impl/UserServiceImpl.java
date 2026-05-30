@@ -145,12 +145,22 @@ public class UserServiceImpl implements UserService {
         TokenUserInfoDTO tokenUserInfoDTO = currentUserUtil.getCurrentUserInfo();
         Map<String, Object> result = new HashMap<>();
         if (tokenUserInfoDTO != null) {
-            // role=2 表示管理者
-            result.put("isAdmin", tokenUserInfoDTO.getRole() != null && tokenUserInfoDTO.getRole() == 2);
-            result.put("role", tokenUserInfoDTO.getRole());
+            Integer role = tokenUserInfoDTO.getRole();
+            // role=2 表示管理者，role=1 表示销售人员
+            boolean isAdmin = role != null && role == 2;
+            boolean isSalesPerson = role != null && role == 1;
+            // 可以访问数据分析：管理员或销售人员
+            boolean canAccessDataAnalysis = isAdmin || isSalesPerson;
+
+            result.put("isAdmin", isAdmin);
+            result.put("isSalesPerson", isSalesPerson);
+            result.put("canAccessDataAnalysis", canAccessDataAnalysis);
+            result.put("role", role);
             return result;
         }
         result.put("isAdmin", false);
+        result.put("isSalesPerson", false);
+        result.put("canAccessDataAnalysis", false);
         result.put("role", null);
         return result;
     }
