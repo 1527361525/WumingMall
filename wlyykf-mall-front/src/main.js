@@ -33,6 +33,21 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 import axios from 'axios'
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL
 
+// 添加请求拦截器：自动添加token
+axios.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token')
+    // 只在token存在且不为空/undefined/null字符串时才添加Authorization header
+    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
+
 // 添加响应拦截器处理响应中的code字段
 axios.interceptors.response.use(
   response => {
