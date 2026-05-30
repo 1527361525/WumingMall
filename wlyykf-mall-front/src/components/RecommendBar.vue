@@ -21,7 +21,7 @@
       >
         <div class="recommend-image-wrapper">
           <img 
-            :src="item.productImage || defaultProductImage" 
+            :src="getImageUrl(item.productImage)" 
             :alt="item.name"
             class="recommend-image"
             @error="handleImageError"
@@ -89,6 +89,13 @@ const handleItemClick = (item) => {
 // 处理图片加载失败
 const handleImageError = (e) => {
   e.target.src = defaultProductImage
+}
+
+// 获取图片完整URL
+const getImageUrl = (sourceName) => {
+  if (!sourceName) return defaultProductImage
+  if (sourceName.startsWith('http')) return sourceName
+  return `${import.meta.env.VITE_API_BASE_URL}/file/getResource?sourceName=${encodeURIComponent(sourceName)}`
 }
 
 // 格式化价格
